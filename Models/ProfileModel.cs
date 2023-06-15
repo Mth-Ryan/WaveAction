@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace WaveAction.Models;
+namespace WaveActionApi.Models;
 
 public class ProfileModel
 {

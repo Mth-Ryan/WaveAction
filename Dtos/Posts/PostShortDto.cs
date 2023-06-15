@@ -1,6 +1,6 @@
-using WaveAction.Dtos.Author;
+using WaveActionApi.Dtos.Author;
 
-namespace WaveAction.Dtos.Posts;
+namespace WaveActionApi.Dtos.Posts;
 
 public class PostShortDto
 {

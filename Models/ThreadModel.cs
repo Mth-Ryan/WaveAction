@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
 
-namespace WaveAction.Models;
+namespace WaveActionApi.Models;
 
 [Index(nameof(Title), IsUnique = true)]
 public class ThreadModel

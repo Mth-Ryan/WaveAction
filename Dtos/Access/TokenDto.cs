@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace WaveAction.Dtos.Access;
+namespace WaveActionApi.Dtos.Access;
 
 public class TokenDto
 {

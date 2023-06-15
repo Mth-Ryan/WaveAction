@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace WaveAction.Migrations
+namespace WaveActionApi.Migrations
 {
     /// <inheritdoc />
     public partial class AditionalInfos : Migration

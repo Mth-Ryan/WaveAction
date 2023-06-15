@@ -1,5 +1,5 @@
-using WaveAction.Data;
-using WaveAction.Services;
+using WaveActionApi.Data;
+using WaveActionApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 

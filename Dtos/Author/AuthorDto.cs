@@ -1,4 +1,4 @@
-namespace WaveAction.Dtos.Author;
+namespace WaveActionApi.Dtos.Author;
 
 public class AuthorDto
 {

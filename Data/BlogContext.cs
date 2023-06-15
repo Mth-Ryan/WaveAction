@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using WaveAction.Models;
+using WaveActionApi.Models;
 
-namespace WaveAction.Data;
+namespace WaveActionApi.Data;
 
 public class BlogContext : DbContext
 {

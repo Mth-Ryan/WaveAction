@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace WaveAction.Dtos.Threads;
+namespace WaveActionApi.Dtos.Threads;
 
 public class ThreadCreateDto
 {

@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace WaveAction.Dtos.Posts;
+namespace WaveActionApi.Dtos.Posts;
 
 public class PostCreateDto
 {

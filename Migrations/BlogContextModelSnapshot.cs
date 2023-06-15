@@ -4,11 +4,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using WaveAction.Data;
+using WaveActionApi.Data;
 
 #nullable disable
 
-namespace WaveAction.Migrations
+namespace WaveActionApi.Migrations
 {
     [DbContext(typeof(BlogContext))]
     partial class BlogContextModelSnapshot : ModelSnapshot

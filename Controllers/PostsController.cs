@@ -1,9 +1,9 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
-using WaveAction.Data;
-using WaveAction.Dtos.Posts;
+using WaveActionApi.Data;
+using WaveActionApi.Dtos.Posts;
 
-namespace WaveAction.Controllers;
+namespace WaveActionApi.Controllers;
 
 [ApiController]
 [Route("[controller]")]

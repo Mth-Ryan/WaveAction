@@ -1,6 +1,6 @@
-using WaveAction.Dtos.Author;
+using WaveActionApi.Dtos.Author;
 
-namespace WaveAction.Dtos.Threads;
+namespace WaveActionApi.Dtos.Threads;
 
 public class ThreadDto
 {

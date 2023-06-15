@@ -1,11 +1,11 @@
 using AutoMapper;
-using WaveAction.Models;
-using WaveAction.Dtos.Access;
-using WaveAction.Dtos.Author;
-using WaveAction.Dtos.Posts;
-using WaveAction.Dtos.Threads;
+using WaveActionApi.Models;
+using WaveActionApi.Dtos.Access;
+using WaveActionApi.Dtos.Author;
+using WaveActionApi.Dtos.Posts;
+using WaveActionApi.Dtos.Threads;
 
-namespace WaveAction.Services;
+namespace WaveActionApi.Services;
 
 public class ObjectMapperFactory
 {
