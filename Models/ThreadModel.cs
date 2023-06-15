@@ -14,6 +14,9 @@ public class ThreadModel
 
     public string? Description { get; set; }
 
+    [Required]
+    public string ThumbnailUrl { get; set; } = "";
+
     public Guid AuthorId { get; set; }
 
     public AuthorModel? Author { get; set; }

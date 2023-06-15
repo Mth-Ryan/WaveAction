@@ -5,7 +5,7 @@ using WaveAction.Dtos.Author;
 namespace WaveAction.Controllers;
 
 [ApiController]
-[Route("[controller]/[action]")]
+[Route("[controller]/[Action]")]
 public class AuthorController : ControllerBase
 {
     private readonly ILogger<AuthorController> _logger;
@@ -17,9 +17,9 @@ public class AuthorController : ControllerBase
         _blogContext = blogContext;
     }
 
-    [HttpGet(Name = "Author Show")]
+    [HttpGet("{id}", Name = "Author Get")]
     [ProducesResponseType(typeof(AuthorDto), 200)]
-    public async Task<IActionResult> Show()
+    public async Task<IActionResult> Get(Guid id)
     {
         if (!ModelState.IsValid)
             return BadRequest();

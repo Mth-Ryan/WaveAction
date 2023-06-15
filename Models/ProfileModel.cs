@@ -21,5 +21,10 @@ public class ProfileModel
 
     public string? Bio { get; set; }
 
+    public string? ShortBio { get; set; }
+
+    [Required]
+    public string? PublicEmail { get; set; }
+
     public string? AvatarUrl { get; set; }
 }
