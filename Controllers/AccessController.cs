@@ -1,3 +1,4 @@
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using WaveAction.Data;
 using WaveAction.Dtos.Access;
@@ -10,11 +11,13 @@ public class AccessController : ControllerBase
 {
     private readonly ILogger<AccessController> _logger;
     private readonly BlogContext _blogContext;
+    private readonly IMapper _mapper;
 
-    public AccessController(ILogger<AccessController> logger, BlogContext blogContext)
+    public AccessController(ILogger<AccessController> logger, BlogContext blogContext, IMapper mapper)
     {
         _logger = logger;
         _blogContext = blogContext;
+        _mapper = mapper;
     }
 
     [HttpPost(Name = "Login")]

@@ -4,6 +4,7 @@ namespace WaveAction.Dtos.Posts;
 
 public class PostCreateDto
 {
+    public Guid ThreadId { get; set; }
     public string? ThumbnailUrl { get; set; }
 
     [Required]

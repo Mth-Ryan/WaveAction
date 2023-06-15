@@ -1,3 +1,4 @@
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using WaveAction.Data;
 using WaveAction.Dtos.Threads;
@@ -10,11 +11,13 @@ public class ThreadsController : ControllerBase
 {
     private readonly ILogger<ThreadsController> _logger;
     private readonly BlogContext _blogContext;
+    private readonly IMapper _mapper;
 
-    public ThreadsController(ILogger<ThreadsController> logger, BlogContext blogContext)
+    public ThreadsController(ILogger<ThreadsController> logger, BlogContext blogContext, IMapper mapper)
     {
         _logger = logger;
         _blogContext = blogContext;
+        _mapper = mapper;
     }
 
     [HttpGet("{id}", Name = "Threads Get")]

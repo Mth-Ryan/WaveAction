@@ -1,3 +1,4 @@
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using WaveAction.Data;
 using WaveAction.Dtos.Posts;
@@ -10,11 +11,13 @@ public class PostsController : ControllerBase
 {
     private readonly ILogger<PostsController> _logger;
     private readonly BlogContext _blogContext;
+    private readonly IMapper _mapper;
 
-    public PostsController(ILogger<PostsController> logger, BlogContext blogContext)
+    public PostsController(ILogger<PostsController> logger, BlogContext blogContext, IMapper mapper)
     {
         _logger = logger;
         _blogContext = blogContext;
+        _mapper = mapper;
     }
 
     [HttpGet("{id}", Name = "Posts Get")]

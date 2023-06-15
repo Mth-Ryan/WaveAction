@@ -1,3 +1,4 @@
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using WaveAction.Data;
 using WaveAction.Dtos.Author;
@@ -10,11 +11,13 @@ public class AuthorController : ControllerBase
 {
     private readonly ILogger<AuthorController> _logger;
     private readonly BlogContext _blogContext;
+    private readonly IMapper _mapper;
 
-    public AuthorController(ILogger<AuthorController> logger, BlogContext blogContext)
+    public AuthorController(ILogger<AuthorController> logger, BlogContext blogContext, IMapper mapper)
     {
         _logger = logger;
         _blogContext = blogContext;
+        _mapper = mapper;
     }
 
     [HttpGet("{id}", Name = "Author Get")]
