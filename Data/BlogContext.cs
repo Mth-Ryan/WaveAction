@@ -3,7 +3,7 @@ using WaveAction.Models;
 
 namespace WaveAction.Data;
 
-class BlogContext : DbContext
+public class BlogContext : DbContext
 {
     private IConfiguration _config;
 
@@ -12,10 +12,10 @@ class BlogContext : DbContext
         _config = configuration;
     }
 
-    public virtual DbSet<AuthorModel> Authors { get; set; }
-    public virtual DbSet<ProfileModel> Profiles { get; set; }
-    public virtual DbSet<ThreadModel> Threads { get; set; }
-    public virtual DbSet<PostModel> Posts { get; set; }
+    public required DbSet<AuthorModel> Authors { get; set; }
+    public required DbSet<ProfileModel> Profiles { get; set; }
+    public required DbSet<ThreadModel> Threads { get; set; }
+    public required DbSet<PostModel> Posts { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) 
         => optionsBuilder.UseNpgsql(_config.GetConnectionString("Postgres"));
