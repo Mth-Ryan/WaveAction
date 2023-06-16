@@ -20,4 +20,24 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="Controllers\Swagger\**" />
+    <Compile Remove="Swagger\Identity\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Remove="Controllers\Swagger\**" />
+    <EmbeddedResource Remove="Swagger\Identity\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Remove="Controllers\Swagger\**" />
+    <Content Remove="Swagger\Identity\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Controllers\Swagger\**" />
+    <None Remove="Swagger\Identity\**" />
+  </ItemGroup>
+
 </Project>

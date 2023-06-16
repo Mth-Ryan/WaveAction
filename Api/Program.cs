@@ -1,8 +1,11 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Swashbuckle.AspNetCore.SwaggerGen;
 using WaveActionApi.Data;
 using WaveActionApi.Services;
+using WaveActionApi.Swagger;
 
 var builder = WebApplication.CreateBuilder(args);
 var config = builder.Configuration;
@@ -36,6 +39,7 @@ builder.Services.AddScoped<IJwtService, JwtService>();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
 
 var app = builder.Build();
 
