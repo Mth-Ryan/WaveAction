@@ -27,7 +27,7 @@ public class AccessController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest();
 
-        return Ok(new TokenDto(){Token = "abc"});
+        return Ok(new TokenDto() { Token = "abc" });
     }
 
     [HttpPost(Name = "Signup")]
@@ -37,6 +37,6 @@ public class AccessController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest();
 
-        return Ok(new TokenDto(){Token = "abc"});
+        return Ok(new TokenDto() { Token = "abc" });
     }
 }

@@ -13,9 +13,10 @@ public class ObjectMapperFactory
 
     public ObjectMapperFactory()
     {
-        _config = new MapperConfiguration(cfg => {
+        _config = new MapperConfiguration(cfg =>
+        {
             // Access Dtos
-            cfg.CreateMap<SignupPorfileDto, ProfileModel>();
+            cfg.CreateMap<SignupProfileDto, ProfileModel>();
             cfg.CreateMap<SignupDto, AuthorDto>();
 
             // Author Dtos
@@ -27,7 +28,8 @@ public class ObjectMapperFactory
             // Posts Dtos
             cfg.CreateMap<PostModel, PostDto>();
             cfg.CreateMap<PostModel, PostShortDto>();
-            cfg.CreateMap<PostCreateDto, PostModel>();
+            cfg.CreateMap<PostCreateDto, PostModel>()
+                .ForMember(dest => dest.Tags, o => o.MapFrom(u => String.Join(",", u.Tags!.ToArray())));
 
             // Threads Dtos
             cfg.CreateMap<ThreadModel, ThreadDto>();

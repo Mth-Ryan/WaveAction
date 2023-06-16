@@ -11,6 +11,5 @@ public class ThreadCreateDto
     [MaxLength(100)]
     public string? Title { get; set; }
 
-    [MaxLength(500)]
-    public string? Description { get; set; }
+    [MaxLength(500)] public string? Description { get; set; }
 }

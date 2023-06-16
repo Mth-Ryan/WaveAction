@@ -17,6 +17,6 @@ public class BlogContext : DbContext
     public required DbSet<ThreadModel> Threads { get; set; }
     public required DbSet<PostModel> Posts { get; set; }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) 
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         => optionsBuilder.UseNpgsql(_config.GetConnectionString("Postgres"));
 }

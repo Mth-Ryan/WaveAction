@@ -4,6 +4,5 @@ namespace WaveActionApi.Dtos.Access;
 
 public class TokenDto
 {
-    [Required]
-    public string? Token { get; set; }
+    [Required] public string? Token { get; set; }
 }

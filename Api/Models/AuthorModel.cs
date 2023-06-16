@@ -7,17 +7,13 @@ namespace WaveActionApi.Models;
 [Index(nameof(Email), IsUnique = true)]
 public class AuthorModel
 {
-    [Key]
-    public Guid Id { get; set; } = Guid.NewGuid();
+    [Key] public Guid Id { get; set; } = Guid.NewGuid();
 
-    [Required]
-    public string? UserName { get; set; }
+    [Required] public string? UserName { get; set; }
 
-    [Required]
-    public string? Email { get; set; }
+    [Required] public string? Email { get; set; }
 
-    [Required]
-    public string? PasswordHash { get; set; }
+    [Required] public string? PasswordHash { get; set; }
 
     public bool Confirmation { get; set; }
 

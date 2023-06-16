@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace WaveActionApi.Dtos.Access;
 
-public class SignupPorfileDto
+public class SignupProfileDto
 {
     [Required]
     [MinLength(2)]
@@ -23,14 +23,11 @@ public class SignupDto
     [RegularExpression(@"^[a-zA-Z_\-]+$")]
     public string? UserName { get; set; }
 
-    [Required]
-    [EmailAddress]
-    public string? Email { get; set; }
+    [Required] [EmailAddress] public string? Email { get; set; }
 
     [Required]
     [RegularExpression(@"^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$")]
     public string? Password { get; set; }
 
-    [Required]
-    public SignupPorfileDto? Profile { get; set; }
+    [Required] public SignupProfileDto? Profile { get; set; }
 }
