@@ -18,19 +18,6 @@ public class AccessController : ControllerBase
     private readonly IMapper _mapper;
     private readonly IJwtService _jwt;
 
-    private static JwtAuthorPayload PayloadFormModel(AuthorModel author)
-    {
-        return new JwtAuthorPayload
-        {
-            Id = author.Id,
-            Admin = author.Admin,
-            UserName = author.UserName,
-            FullName = $"{author.Profile.FirstName} {author.Profile.LastName}",
-            Email = author.Email,
-            AvatarUrl = author.Profile.AvatarUrl,
-        };
-    }
-    
     public AccessController(ILogger<AccessController> logger, BlogContext blogContext, IMapper mapper, IJwtService jwt)
     {
         _logger = logger;
@@ -55,9 +42,7 @@ public class AccessController : ControllerBase
         if (!BC.Verify(login.Password, author.PasswordHash))
             return BadRequest("Invalid Password");
 
-        var payload = PayloadFormModel(author);
-
-        var token = _jwt.GenerateToken(payload);
+        var token = _jwt.GenerateToken(author);
         
         return token is null 
             ? StatusCode(500, "Unable to create te JWT") 
@@ -77,9 +62,7 @@ public class AccessController : ControllerBase
         _blogContext.Authors.Add(author);
         await _blogContext.SaveChangesAsync();
 
-        var payload = PayloadFormModel(author);
-
-        var token = _jwt.GenerateToken(payload);
+        var token = _jwt.GenerateToken(author);
         
         return token is null 
             ? StatusCode(500, "Unable to create te JWT") 

@@ -30,6 +30,7 @@ public class ObjectMapperFactory
             // Posts Dtos
             cfg.CreateMap<PostModel, PostDto>();
             cfg.CreateMap<PostModel, PostShortDto>();
+            // TODO: Fix this mapping
             cfg.CreateMap<PostCreateDto, PostModel>()
                 .ForMember(dest => dest.Tags, o => o.MapFrom(p => string.Join(",", p.Tags!.ToArray())));
 
