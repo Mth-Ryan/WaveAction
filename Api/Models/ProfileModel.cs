@@ -10,9 +10,9 @@ public class ProfileModel
 
     public AuthorModel? Author { get; set; }
 
-    [Required] public string? FirstName { get; set; }
+    [Required] public string FirstName { get; set; } = "";
 
-    [Required] public string? LastName { get; set; }
+    [Required] public string LastName { get; set; } = "";
 
     public string? Title { get; set; }
 
@@ -22,5 +22,5 @@ public class ProfileModel
 
     [Required] public string? PublicEmail { get; set; }
 
-    public string? AvatarUrl { get; set; }
+    public string AvatarUrl { get; set; } = "";
 }

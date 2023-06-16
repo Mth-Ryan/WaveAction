@@ -4,6 +4,7 @@ using WaveActionApi.Dtos.Access;
 using WaveActionApi.Dtos.Author;
 using WaveActionApi.Dtos.Posts;
 using WaveActionApi.Dtos.Threads;
+using BC = BCrypt.Net.BCrypt;
 
 namespace WaveActionApi.Services;
 
@@ -17,7 +18,8 @@ public class ObjectMapperFactory
         {
             // Access Dtos
             cfg.CreateMap<SignupProfileDto, ProfileModel>();
-            cfg.CreateMap<SignupDto, AuthorDto>();
+            cfg.CreateMap<SignupDto, AuthorModel>()
+                .ForMember(dest => dest.PasswordHash, o => o.MapFrom(a => BC.HashPassword(a.Password)));
 
             // Author Dtos
             cfg.CreateMap<ProfileModel, AuthorProfileDto>();
@@ -29,7 +31,7 @@ public class ObjectMapperFactory
             cfg.CreateMap<PostModel, PostDto>();
             cfg.CreateMap<PostModel, PostShortDto>();
             cfg.CreateMap<PostCreateDto, PostModel>()
-                .ForMember(dest => dest.Tags, o => o.MapFrom(u => string.Join(",", u.Tags!.ToArray())));
+                .ForMember(dest => dest.Tags, o => o.MapFrom(p => string.Join(",", p.Tags!.ToArray())));
 
             // Threads Dtos
             cfg.CreateMap<ThreadModel, ThreadDto>();

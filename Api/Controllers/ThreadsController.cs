@@ -1,10 +1,12 @@
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WaveActionApi.Data;
 using WaveActionApi.Dtos.Threads;
 
 namespace WaveActionApi.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("[controller]")]
 public class ThreadsController : ControllerBase
@@ -20,7 +22,8 @@ public class ThreadsController : ControllerBase
         _mapper = mapper;
     }
 
-    [HttpGet("{id}", Name = "Threads Get")]
+    [AllowAnonymous]
+    [HttpGet("{id:guid}", Name = "Threads Get")]
     [ProducesResponseType(typeof(ThreadDto), 200)]
     public async Task<IActionResult> Get(Guid id)
     {
@@ -30,6 +33,7 @@ public class ThreadsController : ControllerBase
         return Ok(new ThreadDto());
     }
 
+    [AllowAnonymous]
     [HttpGet("{name}", Name = "Threads Get From Name")]
     [ProducesResponseType(typeof(ThreadDto), 200)]
     public async Task<IActionResult> Get(string name)
@@ -41,6 +45,7 @@ public class ThreadsController : ControllerBase
     }
 
 
+    [AllowAnonymous]
     [HttpGet(Name = "Threads Get All")]
     [ProducesResponseType(typeof(List<ThreadDto>), 200)]
     public async Task<IActionResult> Get(uint PageSize, uint Page)

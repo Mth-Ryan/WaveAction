@@ -1,10 +1,12 @@
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WaveActionApi.Data;
 using WaveActionApi.Dtos.Posts;
 
 namespace WaveActionApi.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("[controller]")]
 public class PostsController : ControllerBase
@@ -20,7 +22,8 @@ public class PostsController : ControllerBase
         _mapper = mapper;
     }
 
-    [HttpGet("{id}", Name = "Posts Get")]
+    [AllowAnonymous]
+    [HttpGet("{id:guid}", Name = "Posts Get")]
     [ProducesResponseType(typeof(PostDto), 200)]
     public async Task<IActionResult> Get(Guid id)
     {
@@ -30,6 +33,7 @@ public class PostsController : ControllerBase
         return Ok(new PostDto());
     }
 
+    [AllowAnonymous]
     [HttpGet("{name}", Name = "Posts Get From Name")]
     [ProducesResponseType(typeof(PostDto), 200)]
     public async Task<IActionResult> Get(string name)

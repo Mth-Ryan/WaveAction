@@ -1,7 +1,11 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using WaveActionApi.Data;
 using WaveActionApi.Dtos.Access;
+using WaveActionApi.Models;
+using WaveActionApi.Services;
+using BC = BCrypt.Net.BCrypt;
 
 namespace WaveActionApi.Controllers;
 
@@ -12,12 +16,27 @@ public class AccessController : ControllerBase
     private readonly ILogger<AccessController> _logger;
     private readonly BlogContext _blogContext;
     private readonly IMapper _mapper;
+    private readonly IJwtService _jwt;
 
-    public AccessController(ILogger<AccessController> logger, BlogContext blogContext, IMapper mapper)
+    private static JwtAuthorPayload PayloadFormModel(AuthorModel author)
+    {
+        return new JwtAuthorPayload
+        {
+            Id = author.Id,
+            Admin = author.Admin,
+            UserName = author.UserName,
+            FullName = $"{author.Profile.FirstName} {author.Profile.LastName}",
+            Email = author.Email,
+            AvatarUrl = author.Profile.AvatarUrl,
+        };
+    }
+    
+    public AccessController(ILogger<AccessController> logger, BlogContext blogContext, IMapper mapper, IJwtService jwt)
     {
         _logger = logger;
         _blogContext = blogContext;
         _mapper = mapper;
+        _jwt = jwt;
     }
 
     [HttpPost(Name = "Login")]
@@ -27,7 +46,22 @@ public class AccessController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest();
 
-        return Ok(new TokenDto() { Token = "abc" });
+        var author = await _blogContext.Authors
+            .Include(a => a.Profile)
+            .FirstOrDefaultAsync(a => a.UserName == login.UserNameOrEmail || a.Email == login.UserNameOrEmail);
+
+        if (author is null) return BadRequest("Invalid Username or Email");
+
+        if (!BC.Verify(login.Password, author.PasswordHash))
+            return BadRequest("Invalid Password");
+
+        var payload = PayloadFormModel(author);
+
+        var token = _jwt.GenerateToken(payload);
+        
+        return token is null 
+            ? StatusCode(500, "Unable to create te JWT") 
+            : Ok(new TokenDto() { Token = token });
     }
 
     [HttpPost(Name = "Signup")]
@@ -37,6 +71,18 @@ public class AccessController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest();
 
-        return Ok(new TokenDto() { Token = "abc" });
+        var author = _mapper.Map<AuthorModel>(signup);
+        author.Profile.PublicEmail = author.Email;
+        
+        _blogContext.Authors.Add(author);
+        await _blogContext.SaveChangesAsync();
+
+        var payload = PayloadFormModel(author);
+
+        var token = _jwt.GenerateToken(payload);
+        
+        return token is null 
+            ? StatusCode(500, "Unable to create te JWT") 
+            : Ok(new TokenDto() { Token = token });
     }
 }

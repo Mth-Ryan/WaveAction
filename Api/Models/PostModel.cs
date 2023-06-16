@@ -10,13 +10,13 @@ public class PostModel
 
     [Required] public string? Title { get; set; }
 
-    public string? Description { get; set; }
+    public string Description { get; set; } = "";
 
     [Required] public string Tags { get; set; } = "";
 
     [Required] public string ThumbnailUrl { get; set; } = "";
 
-    public string? Content { get; set; }
+    public string Content { get; set; } = "";
 
     public Guid AuthorId { get; set; }
 

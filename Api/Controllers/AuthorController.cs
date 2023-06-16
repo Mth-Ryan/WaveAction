@@ -1,10 +1,12 @@
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WaveActionApi.Data;
 using WaveActionApi.Dtos.Author;
 
 namespace WaveActionApi.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("[controller]/[Action]")]
 public class AuthorController : ControllerBase
@@ -20,7 +22,8 @@ public class AuthorController : ControllerBase
         _mapper = mapper;
     }
 
-    [HttpGet("{id}", Name = "Author Get")]
+    [AllowAnonymous]
+    [HttpGet("{id:guid}", Name = "Author Get")]
     [ProducesResponseType(typeof(AuthorDto), 200)]
     public async Task<IActionResult> Get(Guid id)
     {

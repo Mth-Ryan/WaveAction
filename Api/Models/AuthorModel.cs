@@ -9,11 +9,13 @@ public class AuthorModel
 {
     [Key] public Guid Id { get; set; } = Guid.NewGuid();
 
-    [Required] public string? UserName { get; set; }
+    [Required] public string UserName { get; set; } = "";
 
-    [Required] public string? Email { get; set; }
+    [Required] public string Email { get; set; } = "";
 
-    [Required] public string? PasswordHash { get; set; }
+    [Required] public string PasswordHash { get; set; } = "";
+
+    [Required] public bool Admin { get; set; } = false;
 
     public bool Confirmation { get; set; }
 
