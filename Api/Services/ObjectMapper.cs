@@ -9,7 +9,7 @@ namespace WaveActionApi.Services;
 
 public class ObjectMapperFactory
 {
-    private MapperConfiguration _config;
+    private readonly MapperConfiguration _config;
 
     public ObjectMapperFactory()
     {
@@ -29,7 +29,7 @@ public class ObjectMapperFactory
             cfg.CreateMap<PostModel, PostDto>();
             cfg.CreateMap<PostModel, PostShortDto>();
             cfg.CreateMap<PostCreateDto, PostModel>()
-                .ForMember(dest => dest.Tags, o => o.MapFrom(u => String.Join(",", u.Tags!.ToArray())));
+                .ForMember(dest => dest.Tags, o => o.MapFrom(u => string.Join(",", u.Tags!.ToArray())));
 
             // Threads Dtos
             cfg.CreateMap<ThreadModel, ThreadDto>();

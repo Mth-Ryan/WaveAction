@@ -5,7 +5,7 @@ namespace WaveActionApi.Data;
 
 public class BlogContext : DbContext
 {
-    private IConfiguration _config;
+    private readonly IConfiguration _config;
 
     public BlogContext(IConfiguration configuration)
     {
