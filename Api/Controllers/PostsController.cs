@@ -1,6 +1,7 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using WaveActionApi.Data;
 using WaveActionApi.Dtos.Posts;
 using WaveActionApi.Models;
@@ -31,32 +32,62 @@ public class PostsController : ControllerBase
     [ProducesResponseType(typeof(PostDto), 200)]
     public async Task<IActionResult> Get(Guid id)
     {
-        if (!ModelState.IsValid)
-            return BadRequest();
-
-        return Ok(new PostDto());
+        var post = await _blogContext.Posts
+            .Include(p => p.Author).ThenInclude(a => a!.Profile)
+            .Include(p => p.Thread)
+            .FirstOrDefaultAsync(t => t.Id == id);
+        
+        return post is null 
+            ? BadRequest("Unable to find a post with the given Id")
+            : Ok(_mapper.Map<PostDto>(post));
     }
 
     [AllowAnonymous]
-    [HttpGet("{name}", Name = "Posts Get From Name")]
+    [HttpGet("{title}", Name = "Posts Get From Name")]
     [ProducesResponseType(typeof(PostDto), 200)]
-    public async Task<IActionResult> Get(string name)
+    public async Task<IActionResult> Get(string title)
     {
-        if (!ModelState.IsValid)
-            return BadRequest();
-
-        return Ok(new PostDto());
+        var post = await _blogContext.Posts
+            .Include(p => p.Author).ThenInclude(a => a!.Profile)
+            .Include(p => p.Thread)
+            .FirstOrDefaultAsync(t => t.Title == title);
+        
+        return post is null 
+            ? BadRequest("Unable to find a post with the given Title")
+            : Ok(_mapper.Map<PostDto>(post));
     }
 
 
+    [AllowAnonymous]
     [HttpGet(Name = "Posts Get All")]
     [ProducesResponseType(typeof(List<PostShortDto>), 200)]
-    public async Task<IActionResult> Get(uint PageSize, uint Page)
+    public async Task<IActionResult> Get(uint? pageSize, uint? page)
     {
-        if (!ModelState.IsValid)
-            return BadRequest();
+        var query = _blogContext.Posts
+            .Include(t => t.Author).ThenInclude(a => a!.Profile)
+            .Include(p => p.Thread)
+            .Select(p => new PostModel
+            {
+                Id = p.Id,
+                Title = p.Title,
+                Description = p.Description,
+                Tags = p.Tags,
+                AuthorId = p.AuthorId,
+                Author = p.Author,
+                ThreadId = p.ThreadId,
+                Thread = p.Thread,
+                CreatedAt = p.CreatedAt,
+                UpdatedAt = p.UpdatedAt,
+            })
+            .OrderByDescending(t => t.CreatedAt);
 
-        return Ok(new List<PostShortDto>());
+        var size = pageSize ?? 10;
+        
+        var posts = page is null
+            ? await query.ToListAsync()
+            : await query.Skip(((int)page * (int)size) - 1).Take((int)size).ToListAsync();
+
+        return Ok(_mapper.Map<List<PostModel>, List<PostShortDto>>(posts));
     }
 
     [HttpPost(Name = "Posts Create")]
@@ -82,20 +113,30 @@ public class PostsController : ControllerBase
 
     [HttpPut("{id:guid}", Name = "Posts Update")]
     [ProducesResponseType(typeof(PostDto), 200)]
-    public async Task<IActionResult> Update(Guid id, [FromBody] PostCreateDto threadCreate)
+    public async Task<IActionResult> Update(Guid id, [FromBody] PostCreateDto postCreate)
     {
-        if (!ModelState.IsValid)
-            return BadRequest();
+        var post = await _blogContext.Posts
+            .Include(p => p.Author).ThenInclude(a => a!.Profile)
+            .Include(p => p.Thread)
+            .FirstOrDefaultAsync(t => t.Id == id);
+        
+        if (post is null) return BadRequest("Unable to find a post with the given Id");
+        
+        _mapper.Map(postCreate, post);
+        await _blogContext.SaveChangesAsync();
 
-        return Ok(new PostDto());
+        return Ok(_mapper.Map<PostDto>(post));
     }
 
     [HttpDelete("{id:guid}", Name = "Posts Delete")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        if (!ModelState.IsValid)
-            return BadRequest();
-
+        var post = await _blogContext.Posts.FirstOrDefaultAsync(t => t.Id == id);
+        if (post is null) return BadRequest("Unable to find a post with the given Id");
+        
+        _blogContext.Posts.Remove(post);
+        await _blogContext.SaveChangesAsync();
+        
         return Ok();
     }
 }

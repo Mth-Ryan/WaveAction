@@ -27,6 +27,11 @@ public class ObjectMapperFactory
             cfg.CreateMap<AuthorModel, AuthorDto>();
             cfg.CreateMap<AuthorModel, AuthorShortDto>();
 
+            // Threads Dtos
+            cfg.CreateMap<ThreadModel, ThreadDto>();
+            cfg.CreateMap<ThreadModel, ThreadShortDto>();
+            cfg.CreateMap<ThreadCreateDto, ThreadModel>();
+            
             // Posts Dtos
             cfg.CreateMap<PostModel, PostDto>()
                 .ForMember(
@@ -37,10 +42,6 @@ public class ObjectMapperFactory
                     o => o.MapFrom(p => p.Tags.Split(',', StringSplitOptions.None).ToList()));
             cfg.CreateMap<PostCreateDto, PostModel>()
                 .ForMember(dest => dest.Tags, o => o.MapFrom(p => string.Join(",", p.TagList!.ToArray())));
-
-            // Threads Dtos
-            cfg.CreateMap<ThreadModel, ThreadDto>();
-            cfg.CreateMap<ThreadCreateDto, ThreadModel>();
         });
     }
 
