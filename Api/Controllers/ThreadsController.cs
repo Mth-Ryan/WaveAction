@@ -32,33 +32,45 @@ public class ThreadsController : ControllerBase
     [ProducesResponseType(typeof(ThreadDto), 200)]
     public async Task<IActionResult> Get(Guid id)
     {
-        if (!ModelState.IsValid)
-            return BadRequest();
-
-        return Ok(new ThreadDto());
+        var thread = await _blogContext.Threads
+            .Include(t => t.Author).ThenInclude(a => a!.Profile)
+            .FirstOrDefaultAsync(t => t.Id == id);
+        return thread is null 
+            ? BadRequest("Unable to find a thread with the given Id")
+            : Ok(_mapper.Map<ThreadDto>(thread));
     }
 
     [AllowAnonymous]
-    [HttpGet("{name}", Name = "Threads Get From Name")]
+    [HttpGet("{title}", Name = "Threads Get From Title")]
     [ProducesResponseType(typeof(ThreadDto), 200)]
-    public async Task<IActionResult> Get(string name)
+    public async Task<IActionResult> Get(string title)
     {
-        if (!ModelState.IsValid)
-            return BadRequest();
-
-        return Ok(new ThreadDto());
+        var thread = await _blogContext.Threads
+            .Include(t => t.Author).ThenInclude(a => a!.Profile)
+            .FirstOrDefaultAsync(t => t.Title == title);
+        return thread is null 
+            ? BadRequest("Unable to find a thread with the given Title")
+            : Ok(_mapper.Map<ThreadDto>(thread));
     }
 
 
     [AllowAnonymous]
     [HttpGet(Name = "Threads Get All")]
     [ProducesResponseType(typeof(List<ThreadDto>), 200)]
-    public async Task<IActionResult> Get(uint PageSize, uint Page)
+    public async Task<IActionResult> Get(uint? page, uint? pageSize)
     {
-        if (!ModelState.IsValid)
-            return BadRequest();
+        var query = _blogContext.Threads
+            .Include(t => t.Author)
+            .ThenInclude(a => a!.Profile)
+            .OrderByDescending(t => t.CreatedAt);
 
-        return Ok(new List<ThreadDto>());
+        var size = pageSize ?? 10;
+        
+        var threads = page is null
+            ? await query.ToListAsync()
+            : await query.Skip(((int)page * (int)size) - 1).Take((int)size).ToListAsync();
+
+        return Ok(_mapper.Map<List<ThreadModel>, List<ThreadDto>>(threads));
     }
 
     [HttpPost(Name = "Threads Create")]
@@ -89,15 +101,28 @@ public class ThreadsController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest();
 
-        return Ok(new ThreadDto());
+        var thread = await _blogContext.Threads
+            .Include(t => t.Author)
+            .ThenInclude(a => a!.Profile)
+            .FirstOrDefaultAsync(t => t.Id == id);
+        
+        if (thread is null) return BadRequest("Unable to find a thread with the given Id");
+
+        _mapper.Map(threadCreate, thread);
+        await _blogContext.SaveChangesAsync();
+
+        return Ok(_mapper.Map<ThreadDto>(thread));
     }
 
     [HttpDelete("{id:guid}", Name = "Threads Delete")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        if (!ModelState.IsValid)
-            return BadRequest();
+        var thread = await _blogContext.Threads.FirstOrDefaultAsync(t => t.Id == id);
+        if (thread is null) return BadRequest("Unable to find a thread with the given Id");
 
+        _blogContext.Threads.Remove(thread);
+        await _blogContext.SaveChangesAsync();
+        
         return Ok();
     }
 }
