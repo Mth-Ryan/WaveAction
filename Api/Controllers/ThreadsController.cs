@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WaveActionApi.Data;
+using WaveActionApi.Dtos.Posts;
 using WaveActionApi.Dtos.Threads;
 using WaveActionApi.Models;
 using WaveActionApi.Services;
@@ -36,9 +37,74 @@ public class ThreadsController : ControllerBase
         var thread = await _blogContext.Threads
             .Include(t => t.Author).ThenInclude(a => a!.Profile)
             .FirstOrDefaultAsync(t => t.Id == id);
+        
         return thread is null
             ? BadRequest("Unable to find a thread with the given Id")
             : Ok(_mapper.Map<ThreadDto>(thread));
+    }
+
+    [AllowAnonymous]
+    [HttpGet("{id:guid}/Posts", Name = "Threads Get Posts From Title")]
+    [ProducesResponseType(typeof(List<PostShortDto>), 200)]
+    public async Task<IActionResult> GetPosts(Guid id, uint? page, uint? pageSize)
+    {
+        var query = _blogContext.Posts
+            .Include(p => p.Author)
+            .ThenInclude(a => a!.Profile)
+            .Select(p => new PostModel
+            {
+                Id = p.Id,
+                Title = p.Title,
+                Description = p.Description,
+                Tags = p.Tags,
+                AuthorId = p.AuthorId,
+                Author = p.Author,
+                ThreadId = p.ThreadId,
+                Thread = p.Thread,
+                CreatedAt = p.CreatedAt,
+                UpdatedAt = p.UpdatedAt,
+            })
+            .Where(p => p.ThreadId == id);
+        
+        var size = pageSize ?? 10;
+        
+        var posts = page is null
+            ? await query.ToListAsync()
+            : await query.Skip(((int)page * (int)size) - 1).Take((int)size).ToListAsync();
+
+        return Ok(_mapper.Map<List<PostModel>, List<PostShortDto>>(posts));
+    }
+    
+    [AllowAnonymous]
+    [HttpGet("{title}/Posts", Name = "Threads Get Posts")]
+    [ProducesResponseType(typeof(List<PostShortDto>), 200)]
+    public async Task<IActionResult> GetPosts(string title, uint? page, uint? pageSize)
+    {
+        var query = _blogContext.Posts
+            .Include(p => p.Author)
+            .ThenInclude(a => a!.Profile)
+            .Select(p => new PostModel
+            {
+                Id = p.Id,
+                Title = p.Title,
+                Description = p.Description,
+                Tags = p.Tags,
+                AuthorId = p.AuthorId,
+                Author = p.Author,
+                ThreadId = p.ThreadId,
+                Thread = p.Thread,
+                CreatedAt = p.CreatedAt,
+                UpdatedAt = p.UpdatedAt,
+            })
+            .Where(p => p.Thread!.Title == title);
+        
+        var size = pageSize ?? 10;
+        
+        var posts = page is null
+            ? await query.ToListAsync()
+            : await query.Skip(((int)page * (int)size) - 1).Take((int)size).ToListAsync();
+
+        return Ok(_mapper.Map<List<PostModel>, List<PostShortDto>>(posts));
     }
 
     [AllowAnonymous]
@@ -49,6 +115,7 @@ public class ThreadsController : ControllerBase
         var thread = await _blogContext.Threads
             .Include(t => t.Author).ThenInclude(a => a!.Profile)
             .FirstOrDefaultAsync(t => t.Title == title);
+        
         return thread is null
             ? BadRequest("Unable to find a thread with the given Title")
             : Ok(_mapper.Map<ThreadDto>(thread));
