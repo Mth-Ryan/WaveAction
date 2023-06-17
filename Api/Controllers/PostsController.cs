@@ -36,8 +36,8 @@ public class PostsController : ControllerBase
             .Include(p => p.Author).ThenInclude(a => a!.Profile)
             .Include(p => p.Thread)
             .FirstOrDefaultAsync(t => t.Id == id);
-        
-        return post is null 
+
+        return post is null
             ? BadRequest("Unable to find a post with the given Id")
             : Ok(_mapper.Map<PostDto>(post));
     }
@@ -51,8 +51,8 @@ public class PostsController : ControllerBase
             .Include(p => p.Author).ThenInclude(a => a!.Profile)
             .Include(p => p.Thread)
             .FirstOrDefaultAsync(t => t.Title == title);
-        
-        return post is null 
+
+        return post is null
             ? BadRequest("Unable to find a post with the given Title")
             : Ok(_mapper.Map<PostDto>(post));
     }
@@ -82,7 +82,7 @@ public class PostsController : ControllerBase
             .OrderByDescending(t => t.CreatedAt);
 
         var size = pageSize ?? 10;
-        
+
         var posts = page is null
             ? await query.ToListAsync()
             : await query.Skip(((int)page * (int)size) - 1).Take((int)size).ToListAsync();
@@ -119,9 +119,13 @@ public class PostsController : ControllerBase
             .Include(p => p.Author).ThenInclude(a => a!.Profile)
             .Include(p => p.Thread)
             .FirstOrDefaultAsync(t => t.Id == id);
-        
+
         if (post is null) return BadRequest("Unable to find a post with the given Id");
-        
+
+        var author = await _jwt.GetAuthorFromRequest();
+        if (author is null) return BadRequest("Unable to find the author");
+        if (author.Id != post.AuthorId && !author.Admin) return Forbid();
+
         _mapper.Map(postCreate, post);
         await _blogContext.SaveChangesAsync();
 
@@ -131,12 +135,18 @@ public class PostsController : ControllerBase
     [HttpDelete("{id:guid}", Name = "Posts Delete")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var post = await _blogContext.Posts.FirstOrDefaultAsync(t => t.Id == id);
+        var post = await _blogContext.Posts
+            .Include(p => p.Author)
+            .FirstOrDefaultAsync(t => t.Id == id);
         if (post is null) return BadRequest("Unable to find a post with the given Id");
-        
+
+        var author = await _jwt.GetAuthorFromRequest();
+        if (author is null) return BadRequest("Unable to find the author");
+        if (author.Id != post.AuthorId && !author.Admin) return Forbid();
+
         _blogContext.Posts.Remove(post);
         await _blogContext.SaveChangesAsync();
-        
+
         return Ok();
     }
 }

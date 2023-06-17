@@ -19,7 +19,8 @@ public class ThreadsController : ControllerBase
     private readonly IMapper _mapper;
     private readonly IJwtService _jwt;
 
-    public ThreadsController(ILogger<ThreadsController> logger, BlogContext blogContext, IMapper mapper, IJwtService jwt)
+    public ThreadsController(ILogger<ThreadsController> logger, BlogContext blogContext, IMapper mapper,
+        IJwtService jwt)
     {
         _logger = logger;
         _blogContext = blogContext;
@@ -35,7 +36,7 @@ public class ThreadsController : ControllerBase
         var thread = await _blogContext.Threads
             .Include(t => t.Author).ThenInclude(a => a!.Profile)
             .FirstOrDefaultAsync(t => t.Id == id);
-        return thread is null 
+        return thread is null
             ? BadRequest("Unable to find a thread with the given Id")
             : Ok(_mapper.Map<ThreadDto>(thread));
     }
@@ -48,7 +49,7 @@ public class ThreadsController : ControllerBase
         var thread = await _blogContext.Threads
             .Include(t => t.Author).ThenInclude(a => a!.Profile)
             .FirstOrDefaultAsync(t => t.Title == title);
-        return thread is null 
+        return thread is null
             ? BadRequest("Unable to find a thread with the given Title")
             : Ok(_mapper.Map<ThreadDto>(thread));
     }
@@ -65,7 +66,7 @@ public class ThreadsController : ControllerBase
             .OrderByDescending(t => t.CreatedAt);
 
         var size = pageSize ?? 10;
-        
+
         var threads = page is null
             ? await query.ToListAsync()
             : await query.Skip(((int)page * (int)size) - 1).Take((int)size).ToListAsync();
@@ -105,8 +106,12 @@ public class ThreadsController : ControllerBase
             .Include(t => t.Author)
             .ThenInclude(a => a!.Profile)
             .FirstOrDefaultAsync(t => t.Id == id);
-        
+
         if (thread is null) return BadRequest("Unable to find a thread with the given Id");
+
+        var author = await _jwt.GetAuthorFromRequest();
+        if (author is null) return BadRequest("Unable to find the author");
+        if (author.Id != thread.AuthorId && !author.Admin) return Forbid();
 
         _mapper.Map(threadCreate, thread);
         await _blogContext.SaveChangesAsync();
@@ -117,12 +122,18 @@ public class ThreadsController : ControllerBase
     [HttpDelete("{id:guid}", Name = "Threads Delete")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var thread = await _blogContext.Threads.FirstOrDefaultAsync(t => t.Id == id);
+        var thread = await _blogContext.Threads
+            .Include(t => t.Author)
+            .FirstOrDefaultAsync(t => t.Id == id);
         if (thread is null) return BadRequest("Unable to find a thread with the given Id");
+
+        var author = await _jwt.GetAuthorFromRequest();
+        if (author is null) return BadRequest("Unable to find the author");
+        if (author.Id != thread.AuthorId && !author.Admin) return Forbid();
 
         _blogContext.Threads.Remove(thread);
         await _blogContext.SaveChangesAsync();
-        
+
         return Ok();
     }
 }
