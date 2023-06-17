@@ -1,7 +1,6 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using WaveActionApi.Data;
 using WaveActionApi.Dtos.Posts;
 using WaveActionApi.Models;

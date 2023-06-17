@@ -8,7 +8,7 @@ public class PostShortDto
     public string? ThumbnailUrl { get; set; }
     public string? Title { get; set; }
     public string? Description { get; set; }
-    public List<string>? Tags { get; set; }
+    public List<string>? TagsList { get; set; }
     public AuthorShortDto? Author { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }

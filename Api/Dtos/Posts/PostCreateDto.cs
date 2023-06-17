@@ -16,5 +16,5 @@ public class PostCreateDto
 
     public string? Content { get; set; }
 
-    public List<string>? Tags { get; set; }
+    public List<string>? TagList { get; set; }
 }

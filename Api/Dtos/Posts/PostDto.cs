@@ -10,7 +10,7 @@ public class PostDto
     public string? Description { get; set; }
     public string? Content { get; set; }
     public AuthorShortDto? Author { get; set; }
-    public List<string>? Tags { get; set; }
+    public List<string>? TagList { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }

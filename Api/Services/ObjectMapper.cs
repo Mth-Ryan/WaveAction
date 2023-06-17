@@ -28,11 +28,15 @@ public class ObjectMapperFactory
             cfg.CreateMap<AuthorModel, AuthorShortDto>();
 
             // Posts Dtos
-            cfg.CreateMap<PostModel, PostDto>();
-            cfg.CreateMap<PostModel, PostShortDto>();
-            // TODO: Fix this mapping
+            cfg.CreateMap<PostModel, PostDto>()
+                .ForMember(
+                    dest => dest.TagList,
+                    o => o.MapFrom(p => p.Tags.Split(',', StringSplitOptions.None).ToList()));
+            cfg.CreateMap<PostModel, PostShortDto>()
+                .ForMember(dest => dest.TagsList,
+                    o => o.MapFrom(p => p.Tags.Split(',', StringSplitOptions.None).ToList()));
             cfg.CreateMap<PostCreateDto, PostModel>()
-                .ForMember(dest => dest.Tags, o => o.MapFrom(p => string.Join(",", p.Tags!.ToArray())));
+                .ForMember(dest => dest.Tags, o => o.MapFrom(p => string.Join(",", p.TagList!.ToArray())));
 
             // Threads Dtos
             cfg.CreateMap<ThreadModel, ThreadDto>();
