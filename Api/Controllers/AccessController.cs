@@ -27,7 +27,7 @@ public class AccessController : ControllerBase
     }
 
     [HttpPost(Name = "Login")]
-    [ProducesResponseType(typeof(TokenDto), 200)]
+    [ProducesResponseType(typeof(TokensDto), 200)]
     public async Task<IActionResult> Login([FromBody] LoginDto login)
     {
         if (!ModelState.IsValid)
@@ -42,15 +42,16 @@ public class AccessController : ControllerBase
         if (!BC.Verify(login.Password, author.PasswordHash))
             return BadRequest("Invalid Password");
 
-        var token = _jwt.GenerateToken(author);
+        var jwt = _jwt.GenerateToken(author);
+        var refresh = await _jwt.GenerateRefreshToken(author);
         
-        return token is null 
-            ? StatusCode(500, "Unable to create te JWT") 
-            : Ok(new TokenDto() { Token = token });
+        return (jwt is null  || refresh is null)
+            ? StatusCode(500, "Unable to create te JWT or Refresh Token") 
+            : Ok(new TokensDto { Jwt = jwt, Refresh = refresh});
     }
 
     [HttpPost(Name = "Signup")]
-    [ProducesResponseType(typeof(TokenDto), 200)]
+    [ProducesResponseType(typeof(TokensDto), 200)]
     public async Task<IActionResult> Signup([FromBody] SignupDto signup)
     {
         if (!ModelState.IsValid)
@@ -62,10 +63,25 @@ public class AccessController : ControllerBase
         _blogContext.Authors.Add(author);
         await _blogContext.SaveChangesAsync();
 
-        var token = _jwt.GenerateToken(author);
+        var jwt = _jwt.GenerateToken(author);
+        var refresh = await _jwt.GenerateRefreshToken(author);
         
-        return token is null 
+        return (jwt is null  || refresh is null)
+            ? StatusCode(500, "Unable to create te JWT or Refresh Token") 
+            : Ok(new TokensDto { Jwt = jwt, Refresh = refresh});
+    }
+
+    [HttpPost(Name = "Refresh")]
+    [ProducesResponseType(typeof(TokensDto), 200)]
+    public async Task<IActionResult> Refresh([FromBody] RefreshTokenDto refresh)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest();
+        
+        var jwt = await _jwt.RefreshJwt(refresh.Refresh);
+        
+        return (jwt is null)
             ? StatusCode(500, "Unable to create te JWT") 
-            : Ok(new TokenDto() { Token = token });
+            : Ok(new TokensDto { Jwt = jwt, Refresh = refresh.Refresh});
     }
 }
