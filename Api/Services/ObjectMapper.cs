@@ -22,6 +22,7 @@ public class ObjectMapperFactory
                 .ForMember(dest => dest.PasswordHash, o => o.MapFrom(a => BC.HashPassword(a.Password)));
 
             // Author Dtos
+            cfg.CreateMap<AuthorProfileDto, ProfileModel>();
             cfg.CreateMap<ProfileModel, AuthorProfileDto>();
             cfg.CreateMap<ProfileModel, AuthorShortProfileDto>();
             cfg.CreateMap<AuthorModel, AuthorDto>();

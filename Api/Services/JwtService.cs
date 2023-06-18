@@ -122,22 +122,6 @@ public class JwtService : IJwtService
         if (payload is null) return null;
         return await _blogContext.Authors
             .Include(a => a.Profile)
-            .Select(a => new AuthorModel
-            {
-                Id = a.Id,
-                UserName = a.UserName,
-                Email = a.Email,
-                Admin = a.Admin,
-                Profile = new ProfileModel
-                {
-                    FirstName = a.Profile.FirstName,
-                    LastName = a.Profile.LastName,
-                    Title = a.Profile.Title,
-                    ShortBio = a.Profile.ShortBio,
-                    PublicEmail = a.Profile.PublicEmail,
-                    AvatarUrl = a.Profile.AvatarUrl,
-                }
-            })
             .FirstOrDefaultAsync(a => a.Id == payload.Id);
     }
 }

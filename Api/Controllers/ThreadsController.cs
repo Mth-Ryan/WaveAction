@@ -39,7 +39,7 @@ public class ThreadsController : ControllerBase
             .AsNoTracking()
             .Include(t => t.Author).ThenInclude(a => a!.Profile)
             .FirstOrDefaultAsync(t => t.Id == id);
-        
+
         return thread is null
             ? BadRequest("Unable to find a thread with the given Id")
             : Ok(_mapper.Map<ThreadDto>(thread));
@@ -52,8 +52,8 @@ public class ThreadsController : ControllerBase
     {
         if (pageSize > 1000) return BadRequest("The page size exceeds the limit of 1000");
 
-        var total = await _blogContext.Posts.Where(p => p.Thread!.Id == id).CountAsync();
-        
+        var total = await _blogContext.Posts.Where(p => p.ThreadId == id).CountAsync();
+
         var posts = await _blogContext.Posts
             .AsNoTracking()
             .Include(p => p.Author)
@@ -77,7 +77,7 @@ public class ThreadsController : ControllerBase
             .ToListAsync();
 
         var data = _mapper.Map<List<PostModel>, List<PostShortDto>>(posts);
-        
+
         return Ok(new PaginatedDataDto<PostShortDto>
         {
             Page = page,
@@ -86,7 +86,7 @@ public class ThreadsController : ControllerBase
             Data = data!
         });
     }
-    
+
     [AllowAnonymous]
     [HttpGet("{title}/Posts", Name = "Threads Get Posts From Title")]
     [ProducesResponseType(typeof(List<PostShortDto>), 200)]
@@ -94,8 +94,11 @@ public class ThreadsController : ControllerBase
     {
         if (pageSize > 1000) return BadRequest("The page size exceeds the limit of 1000");
 
-        var total = await _blogContext.Posts.Where(p => p.Thread!.Title == title).CountAsync();
-        
+        var total = await _blogContext.Posts
+            .Include(p => p.Thread)
+            .Where(p => p.Thread!.Title == title)
+            .CountAsync();
+
         var posts = await _blogContext.Posts
             .AsNoTracking()
             .Include(p => p.Author)
@@ -119,7 +122,7 @@ public class ThreadsController : ControllerBase
             .ToListAsync();
 
         var data = _mapper.Map<List<PostModel>, List<PostShortDto>>(posts);
-        
+
         return Ok(new PaginatedDataDto<PostShortDto>
         {
             Page = page,
@@ -138,7 +141,7 @@ public class ThreadsController : ControllerBase
             .AsNoTracking()
             .Include(t => t.Author).ThenInclude(a => a!.Profile)
             .FirstOrDefaultAsync(t => t.Title == title);
-        
+
         return thread is null
             ? BadRequest("Unable to find a thread with the given Title")
             : Ok(_mapper.Map<ThreadDto>(thread));
@@ -153,7 +156,7 @@ public class ThreadsController : ControllerBase
         if (pageSize > 1000) return BadRequest("The page size exceeds the limit of 1000");
 
         var total = await _blogContext.Threads.CountAsync();
-        
+
         var threads = await _blogContext.Threads
             .AsNoTracking()
             .Include(t => t.Author)
@@ -164,7 +167,7 @@ public class ThreadsController : ControllerBase
             .ToListAsync();
 
         var data = _mapper.Map<List<ThreadModel>, List<ThreadDto>>(threads);
-        
+
         return Ok(new PaginatedDataDto<ThreadDto>
         {
             Page = page,
