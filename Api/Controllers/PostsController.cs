@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WaveActionApi.Data;
 using WaveActionApi.Dtos.Posts;
+using WaveActionApi.Dtos.Shared;
 using WaveActionApi.Models;
 using WaveActionApi.Services;
 
@@ -33,6 +34,7 @@ public class PostsController : ControllerBase
     public async Task<IActionResult> Get(Guid id)
     {
         var post = await _blogContext.Posts
+            .AsNoTracking()
             .Include(p => p.Author).ThenInclude(a => a!.Profile)
             .Include(p => p.Thread)
             .FirstOrDefaultAsync(t => t.Id == id);
@@ -48,6 +50,7 @@ public class PostsController : ControllerBase
     public async Task<IActionResult> Get(string title)
     {
         var post = await _blogContext.Posts
+            .AsNoTracking()
             .Include(p => p.Author).ThenInclude(a => a!.Profile)
             .Include(p => p.Thread)
             .FirstOrDefaultAsync(t => t.Title == title);
@@ -60,10 +63,14 @@ public class PostsController : ControllerBase
 
     [AllowAnonymous]
     [HttpGet(Name = "Posts Get All")]
-    [ProducesResponseType(typeof(List<PostShortDto>), 200)]
-    public async Task<IActionResult> Get(uint? pageSize, uint? page)
+    [ProducesResponseType(typeof(PaginatedDataDto<PostShortDto>), 200)]
+    public async Task<IActionResult> Get(uint page = 0, uint pageSize = 25)
     {
-        var query = _blogContext.Posts
+        if (pageSize > 1000) return BadRequest("The page size exceeds the limit of 1000");
+
+        var total = await _blogContext.Posts.CountAsync();
+        var posts = await _blogContext.Posts
+            .AsNoTracking()
             .Include(t => t.Author).ThenInclude(a => a!.Profile)
             .Include(p => p.Thread)
             .Select(p => new PostModel
@@ -79,15 +86,20 @@ public class PostsController : ControllerBase
                 CreatedAt = p.CreatedAt,
                 UpdatedAt = p.UpdatedAt,
             })
-            .OrderByDescending(t => t.CreatedAt);
+            .Skip((int)pageSize * (int)page)
+            .Take((int)pageSize)
+            .OrderByDescending(t => t.CreatedAt)
+            .ToListAsync();
 
-        var size = pageSize ?? 10;
+        var data = _mapper.Map<List<PostModel>, List<PostShortDto>>(posts);
 
-        var posts = page is null
-            ? await query.ToListAsync()
-            : await query.Skip(((int)page * (int)size) - 1).Take((int)size).ToListAsync();
-
-        return Ok(_mapper.Map<List<PostModel>, List<PostShortDto>>(posts));
+        return Ok(new PaginatedDataDto<PostShortDto>
+        {
+            ItemsTotalCount = (uint)total,
+            Page = page,
+            PageSize = pageSize,
+            Data = data!
+        });
     }
 
     [HttpPost(Name = "Posts Create")]
