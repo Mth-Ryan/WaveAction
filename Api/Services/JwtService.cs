@@ -1,7 +1,10 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.IdentityModel.Tokens;
 using WaveActionApi.Data;
 using WaveActionApi.Models;
@@ -26,21 +29,45 @@ public interface IJwtService
     public IEnumerable<Claim>? GetClaimsFromRequest();
     public JwtAuthorPayload? GetPayloadFromRequest();
     public Task<AuthorModel?> GetAuthorFromRequest();
+    public Task SaveRefreshToken(string bareToken, JwtAuthorPayload payload);
+    public Task RemoveRefreshToken(string token);
+    public Task<JwtAuthorPayload?> GetPayloadFromRefreshToken(string token);
+    public Task<string?> GenerateRefreshToken(JwtAuthorPayload payload);
+    public Task<string?> GenerateRefreshToken(AuthorModel author);
+    public Task<string?> RefreshJwt(string oldRefreshToken);
 }
 
 public class JwtService : IJwtService
 {
-    // TODO: Refresh token
-    private static readonly TimeSpan TokenLife = TimeSpan.FromHours(24);
+    private static readonly TimeSpan JwtLife = TimeSpan.FromMinutes(15);
+    private static readonly TimeSpan RefreshTokenLife = TimeSpan.FromDays(31);
+
     private readonly IConfiguration _config;
     private readonly HttpContext? _context;
     private readonly BlogContext _blogContext;
+    private readonly IDistributedCache _cacheContext;
 
-    public JwtService(IConfiguration config, IHttpContextAccessor contextAccessor, BlogContext blogContext)
+    public JwtService(IConfiguration config, IHttpContextAccessor contextAccessor,
+        BlogContext blogContext,
+        IDistributedCache cache)
     {
         _config = config;
         _context = contextAccessor.HttpContext;
         _blogContext = blogContext;
+        _cacheContext = cache;
+    }
+
+    private static JwtAuthorPayload CreatePayloadFromAuthor(AuthorModel author)
+    {
+        return new JwtAuthorPayload
+        {
+            Id = author.Id,
+            Email = author.Email,
+            UserName = author.UserName,
+            FullName = $"{author.Profile.FirstName} {author.Profile.LastName}",
+            AvatarUrl = author.Profile.AvatarUrl,
+            Admin = author.Admin
+        };
     }
 
     private SecurityTokenDescriptor CreateTokenDescriptor(JwtAuthorPayload payload)
@@ -61,7 +88,7 @@ public class JwtService : IJwtService
                 new Claim("admin", payload.Admin.ToString()),
                 new Claim("avatarUrl", payload.AvatarUrl),
             }),
-            Expires = DateTime.UtcNow.Add(TokenLife),
+            Expires = DateTime.UtcNow.Add(JwtLife),
             Issuer = issuer,
             Audience = audience,
             SigningCredentials =
@@ -78,23 +105,14 @@ public class JwtService : IJwtService
 
     public string? GenerateToken(AuthorModel author)
     {
-        var payload = new JwtAuthorPayload
-        {
-            Id = author.Id,
-            Email = author.Email,
-            UserName = author.UserName,
-            FullName = $"{author.Profile.FirstName} {author.Profile.LastName}",
-            AvatarUrl = author.Profile.AvatarUrl,
-            Admin = author.Admin
-        };
-        return GenerateToken(payload);
+        return GenerateToken(CreatePayloadFromAuthor(author));
     }
 
     public IEnumerable<Claim>? GetClaimsFromRequest()
     {
         string? token = _context?.Request.Headers["Authorization"];
         if (token is null) return null;
-        
+
         var tokenHandler = new JwtSecurityTokenHandler();
         var jwt = tokenHandler.ReadJwtToken(token["Bearer ".Length..]);
         return jwt.Claims;
@@ -123,5 +141,55 @@ public class JwtService : IJwtService
         return await _blogContext.Authors
             .Include(a => a.Profile)
             .FirstOrDefaultAsync(a => a.Id == payload.Id);
+    }
+
+    public async Task SaveRefreshToken(string bareToken, JwtAuthorPayload payload)
+    {
+        var value = JsonSerializer.Serialize(payload);
+        var options = new DistributedCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = RefreshTokenLife,
+        };
+        await _cacheContext.SetAsync(bareToken, Encoding.UTF8.GetBytes(value), options);
+    }
+
+    public async Task RemoveRefreshToken(string token)
+    {
+        await _cacheContext.RemoveAsync(token);
+    }
+
+    public async Task<JwtAuthorPayload?> GetPayloadFromRefreshToken(string token)
+    {
+        var bareValue = await _cacheContext.GetAsync(token);
+        if (bareValue is null) return null;
+
+        var payload = JsonSerializer.Deserialize<JwtAuthorPayload>(Encoding.UTF8.GetString(bareValue));
+        return payload;
+    }
+
+    public async Task<string?> GenerateRefreshToken(JwtAuthorPayload payload)
+    {
+        var randomNumber = new byte[32];
+        using var rng = RandomNumberGenerator.Create();
+        rng.GetBytes(randomNumber);
+        var bareToken = Convert.ToBase64String(randomNumber);
+        await SaveRefreshToken(bareToken, payload);
+        return bareToken;
+    }
+
+    public async Task<string?> GenerateRefreshToken(AuthorModel author)
+    {
+        return await GenerateRefreshToken(CreatePayloadFromAuthor(author));
+    }
+
+    public async Task<string?> RefreshJwt(string refreshToken)
+    {
+        var payload = await GetPayloadFromRefreshToken(refreshToken);
+        if (payload is null) return null;
+
+        var jwt = GenerateToken(payload);
+        await _cacheContext.RefreshAsync(refreshToken);
+
+        return jwt;
     }
 }

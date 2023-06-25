@@ -12,6 +12,11 @@ var config = builder.Configuration;
 
 // Add services to the container.
 builder.Services.AddDbContext<BlogContext>();
+builder.Services.AddStackExchangeRedisCache(o =>
+{
+    o.Configuration = config.GetConnectionString("Redis");
+    o.InstanceName = "WaveActionCache";
+});
 builder.Services.AddControllers();
 builder.Services.AddSingleton(new ObjectMapperFactory().CreateMapper());
 builder.Services.AddAuthentication(o =>
