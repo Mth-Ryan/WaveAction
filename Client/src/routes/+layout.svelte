@@ -76,8 +76,29 @@
 		width: theme(width.screen);
 		height: theme(height.screen);
 	}
+	
+	:global(a) {
+		@apply text-sky-700;
+	}
+	
+	:global(a:visited) {
+		@apply text-sky-900;
+	}
 
 	:global(.z-negative) {
 		z-index: -1;
+	}
+	
+	:global(.elevated-button) {
+		@apply bg-slate-200;
+		@apply text-slate-950;
+		@apply font-bold;
+		@apply px-5;
+		@apply py-2;
+		@apply rounded-md;
+	}
+	
+	:global(.elevated-button:hover) {
+		box-shadow: 0 0 0.5rem theme(colors.slate.300);
 	}
 </style>
