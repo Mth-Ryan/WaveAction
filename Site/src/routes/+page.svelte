@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { ArrowRight, Search } from "lucide-svelte";
     import SpotlightGradient from '$lib/assets/spotlight-gradient.svg';
+	import type { ThreadShow } from "$lib/models/ThreadShow";
+	import type { PostShow } from "$lib/models/PostShow";
 
     let dateFormatOptions: Intl.DateTimeFormatOptions = {
         year: 'numeric',
@@ -8,41 +10,7 @@
         day: 'numeric',
     };
 
-    let featuredThreadData = {
-        title: "Wave Compiler",
-        description: `Creating a compiler from scratch from the lexer to his own virtual machine and bycode assembler`,
-        updatedAt: new Date(2023, 1, 20),
-    };
-
-    let postsData = [
-        {
-            thumbUrl: "https://cdn.dribbble.com/users/42044/screenshots/3005807/media/d21d0efa3fc373de652cb6beac874f23.png",
-            thread: {
-                title: "Aspnet Core"
-            },
-            slugTitle: "e-commerce-microservice-architecture-with-aspnet-core-kafka-and-grpc",
-            title: "E-Commerce microservice architecture with Aspnet Core, Kafka and Grpc",
-            createdAt: new Date(2023, 5, 23)
-        },
-        {
-            thumbUrl: "https://codequotient.com/blog/wp-content/uploads/2022/05/Difference-Between-Compiler-And-Interpreter-In-Java.jpg",
-            thread: {
-                title: "Wave Compiler"
-            },
-            slugTitle: "creating-a-stack-virtual-machine-for-the-wave-compiler",
-            title: "Creating a Stack virtual machine for the Wave Compiler",
-            createdAt: new Date(2023, 3, 5)
-        },
-        {
-            thumbUrl: "https://media.licdn.com/dms/image/D5612AQFaqTn2Q7-D1A/article-cover_image-shrink_720_1280/0/1660195253757?e=2147483647&v=beta&t=DlC0CtegN4HZTI7kRSxBU-PRZLmtcWe9hOpHygcB6So",
-            thread: {
-                title: "By Hand Projects"
-            },
-            slugTitle: "how-hard-is-to-build-your-own-neural-network",
-            title: "How hard is to build your own neural network?",
-            createdAt: new Date(2023, 2, 12)
-        },
-    ];
+    export let data: { featuredThread: ThreadShow, posts: PostShow[] };
 </script>
 
 <svelte:head>
@@ -78,11 +46,11 @@
                 <span class="text-slate-700 mb-4">Featured Thread</span>
 
                 <div>
-                    <h2 class="text-2xl text-slate-200 mb-3">{featuredThreadData.title}</h2>
-                    <p class="text-sm">{featuredThreadData.description}</p>
+                    <h2 class="text-2xl text-slate-200 mb-3">{data.featuredThread.title}</h2>
+                    <p class="text-sm">{data.featuredThread.description}</p>
                 </div>
 
-                <span class="text-slate-700 mt-6">Last update: {featuredThreadData.updatedAt.toLocaleString("en-US", dateFormatOptions)}</span>
+                <span class="text-slate-700 mt-6">Last update: {data.featuredThread.updatedAt.toLocaleString("en-US", dateFormatOptions)}</span>
             </div>
 
             <img class="absolute z-negative min-w-full right-0 bottom-0" src={SpotlightGradient} alt="">
@@ -91,7 +59,7 @@
 
     <section>
         <div class="flex flex-wrap gap-8">
-            {#each postsData as post}
+            {#each data.posts as post}
             <a href={`/posts/${post.slugTitle}`} class="post bg-slate-800 bg-opacity-60 text-slate-300 visited:text-slate-300 rounded-xl border border-slate-700 overflow-hidden flex-[1_32ch] flex flex-col justify-between">
                 <div>
                     <div class="w-full bg-slate-700 bg-opacity-50">
