@@ -1,8 +1,26 @@
 <script lang="ts">
     import SpotlightGradient from '$lib/assets/spotlight-gradient.svg'; 
     import { X, BookOpen, Info } from 'lucide-svelte';
+	import { onMount } from 'svelte';
 
     export let open = false;
+
+    let enableScroll = () => {};
+    let disableScroll = () => {};
+
+    onMount(() => {
+        document.addEventListener("keydown", (e) => {
+            if (open && e.key == "Escape")
+                open = false;
+        });
+
+        disableScroll = () => { document.body.style.overflow = "hidden"; };
+        enableScroll = () => { document.body.style.overflow = "auto"; };
+    })
+
+    $: {
+        open ? disableScroll() : enableScroll();
+    }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -70,5 +88,13 @@
         @apply py-1;
         @apply border-s-2;
         @apply border-slate-800;
+    }
+
+    a {
+        @apply text-slate-300;
+    }
+
+    a:visited {
+        @apply text-slate-300;
     }
 </style>

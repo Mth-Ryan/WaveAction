@@ -1,29 +1,8 @@
 <script lang="ts">
-	import { Search } from "lucide-svelte";
+	import { Search, ArrowRight } from "lucide-svelte";
     import Dialog from "./Dialog.svelte";
-	import { goto } from "$app/navigation";
 
     export let open = false;
-    let value = '';
-
-    const handleSubmit = () => {
-        goto(`/search?q=${encodeURI(value)}`)
-    }
-
-    const handleKey = (e: KeyboardEvent) => {
-        switch (e.key) {
-            case "Enter":
-                handleSubmit();
-                break;
-
-            case "Escape":
-                open = false;
-                break;
-        
-            default:
-                break;
-        }
-    }
 </script>
 
 <Dialog bind:open={open} showHeader={false}>
@@ -32,18 +11,14 @@
     </span>
 
     <div slot="body">
-        <label class="flex gap-2">
-            <Search size=20 />
-            <input 
-                bind:value
-                on:keydown={handleKey}
-                class="bg-transparent border-none outline-none w-full" 
-                type="search"
-                placeholder="Search" 
-            />
-            <span class="bg-slate-700 rounded-md px-2">
-                &#10550;
-            </span>
-        </label>
+        <form action="/search" method="get" class="group flex items-center gap-2">
+            <label class="flex gap-4 w-full">
+                <Search class="text-slate-700" />
+                <input name="q" class="bg-transparent w-full border-none outline-none placeholder:text-slate-700" placeholder="Search" type="search">
+            </label>
+            <button type="submit" class="invisible group-hover:visible">
+                <ArrowRight class="text-slate-500" />
+            </button>
+        </form>
     </div>
 </Dialog>

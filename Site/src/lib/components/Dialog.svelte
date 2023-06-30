@@ -1,9 +1,27 @@
 <script lang="ts">
     import SpotlightGradient from '$lib/assets/spotlight-gradient.svg'; 
 	import { X } from "lucide-svelte";
+	import { onMount } from 'svelte';
 
     export let open = false;
     export let showHeader = true;
+
+    let enableScroll = () => {};
+    let disableScroll = () => {};
+
+    onMount(() => {
+        document.addEventListener("keydown", (e) => {
+            if (open && e.key == "Escape")
+                open = false;
+        });
+
+        disableScroll = () => { document.body.style.overflow = "hidden"; };
+        enableScroll = () => { document.body.style.overflow = "auto"; };
+    })
+
+    $: {
+        open ? disableScroll() : enableScroll();
+    }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
