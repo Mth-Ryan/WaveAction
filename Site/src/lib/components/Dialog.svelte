@@ -30,14 +30,14 @@
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div 
-    class="invisible absolute left-0 top-0 z-40 w-screen h-screen backdrop-blur-sm transition-opacity opacity-0"
+    class="invisible fixed left-0 top-0 z-40 w-full h-full backdrop-blur-sm transition-opacity opacity-0"
     class:open
     on:click={() => { if (!disableOutClickExit) open = false; }}>
 </div>
 
 <div 
     id="dialog"
-    class="invisible absolute top-1/2 left-1/2 z-50 transition-opacity opacity-0 max-w-md p-4 bg-slate-800 rounded-lg border border-slate-700 overflow-hidden"
+    class="invisible fixed top-1/2 left-1/2 z-50 transition-opacity opacity-0 max-w-md p-4 bg-slate-800 rounded-lg border border-slate-700 overflow-hidden"
     class:open
 >
     <div class="hidden justify-between" class:showHeader>

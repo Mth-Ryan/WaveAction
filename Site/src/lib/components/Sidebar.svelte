@@ -25,12 +25,12 @@
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div 
-    class="invisible absolute left-0 top-0 z-30 w-screen h-screen backdrop-blur-sm transition-opacity opacity-0"
+    class="invisible fixed left-0 top-0 z-30 w-screen h-screen backdrop-blur-sm transition-opacity opacity-0"
     class:open
     on:click={() => { open = false; }}>
 </div>
 
-<aside class="invisible absolute z-40 right-0 w-72 h-full pe-4 ps-6 bg-slate-900 border-s border-slate-800 transition-opacity opacity-0 overflow-hidden" class:open>
+<aside class="invisible fixed z-40 right-0 w-72 h-full pe-4 ps-6 bg-slate-900 border-s border-slate-800 transition-opacity opacity-0 overflow-hidden" class:open>
     <div class="py-6 flex justify-end">
         <button on:click={() => { open = false; }}>
             <X />
