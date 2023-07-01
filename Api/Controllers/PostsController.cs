@@ -45,18 +45,18 @@ public class PostsController : ControllerBase
     }
 
     [AllowAnonymous]
-    [HttpGet("{title}", Name = "Posts Get From Name")]
+    [HttpGet("{titleSlug}", Name = "Posts Get From Title Slug")]
     [ProducesResponseType(typeof(PostDto), 200)]
-    public async Task<IActionResult> Get(string title)
+    public async Task<IActionResult> Get(string titleSlug)
     {
         var post = await _blogContext.Posts
             .AsNoTracking()
             .Include(p => p.Author).ThenInclude(a => a!.Profile)
             .Include(p => p.Thread)
-            .FirstOrDefaultAsync(t => t.Title == title);
+            .FirstOrDefaultAsync(t => t.TitleSlug == titleSlug);
 
         return post is null
-            ? BadRequest("Unable to find a post with the given Title")
+            ? BadRequest("Unable to find a post with the given Title Slug")
             : Ok(_mapper.Map<PostDto>(post));
     }
 

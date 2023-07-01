@@ -88,15 +88,15 @@ public class ThreadsController : ControllerBase
     }
 
     [AllowAnonymous]
-    [HttpGet("{title}/Posts", Name = "Threads Get Posts From Title")]
+    [HttpGet("{titleSlug}/Posts", Name = "Threads Get Posts From Title Slug")]
     [ProducesResponseType(typeof(List<PostShortDto>), 200)]
-    public async Task<IActionResult> GetPosts(string title, uint page = 0, uint pageSize = 25)
+    public async Task<IActionResult> GetPosts(string titleSlug, uint page = 0, uint pageSize = 25)
     {
         if (pageSize > 1000) return BadRequest("The page size exceeds the limit of 1000");
 
         var total = await _blogContext.Posts
             .Include(p => p.Thread)
-            .Where(p => p.Thread!.Title == title)
+            .Where(p => p.Thread!.TitleSlug == titleSlug)
             .CountAsync();
 
         var posts = await _blogContext.Posts
@@ -116,7 +116,7 @@ public class ThreadsController : ControllerBase
                 CreatedAt = p.CreatedAt,
                 UpdatedAt = p.UpdatedAt,
             })
-            .Where(p => p.Thread!.Title == title)
+            .Where(p => p.Thread!.TitleSlug == titleSlug)
             .Skip((int)page * (int)pageSize)
             .Take((int)pageSize)
             .ToListAsync();
@@ -133,14 +133,14 @@ public class ThreadsController : ControllerBase
     }
 
     [AllowAnonymous]
-    [HttpGet("{title}", Name = "Threads Get From Title")]
+    [HttpGet("{titleSlug}", Name = "Threads Get From Title Slug")]
     [ProducesResponseType(typeof(ThreadDto), 200)]
-    public async Task<IActionResult> Get(string title)
+    public async Task<IActionResult> Get(string titleSlug)
     {
         var thread = await _blogContext.Threads
             .AsNoTracking()
             .Include(t => t.Author).ThenInclude(a => a!.Profile)
-            .FirstOrDefaultAsync(t => t.Title == title);
+            .FirstOrDefaultAsync(t => t.TitleSlug == titleSlug);
 
         return thread is null
             ? BadRequest("Unable to find a thread with the given Title")

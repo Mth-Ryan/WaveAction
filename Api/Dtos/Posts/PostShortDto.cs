@@ -8,6 +8,7 @@ public class PostShortDto
     public Guid Id { get; set; }
     public string? ThumbnailUrl { get; set; }
     public string? Title { get; set; }
+    public string? TitleSlug { get; set; }
     public string? Description { get; set; }
     public List<string>? TagsList { get; set; }
     public AuthorShortDto? Author { get; set; }
