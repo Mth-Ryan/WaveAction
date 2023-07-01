@@ -1,9 +1,8 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using WaveActionApi.Data;
 using WaveActionApi.Dtos.Access;
 using WaveActionApi.Models;
+using WaveActionApi.Repositories;
 using WaveActionApi.Services;
 using BC = BCrypt.Net.BCrypt;
 
@@ -14,14 +13,18 @@ namespace WaveActionApi.Controllers;
 public class AccessController : ControllerBase
 {
     private readonly ILogger<AccessController> _logger;
-    private readonly BlogContext _blogContext;
+    private readonly IAccessRepository _repository;
     private readonly IMapper _mapper;
     private readonly IJwtService _jwt;
 
-    public AccessController(ILogger<AccessController> logger, BlogContext blogContext, IMapper mapper, IJwtService jwt)
+    public AccessController(
+        ILogger<AccessController> logger,
+        IAccessRepository repository,
+        IMapper mapper,
+        IJwtService jwt)
     {
         _logger = logger;
-        _blogContext = blogContext;
+        _repository = repository;
         _mapper = mapper;
         _jwt = jwt;
     }
@@ -33,9 +36,7 @@ public class AccessController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest();
 
-        var author = await _blogContext.Authors
-            .Include(a => a.Profile)
-            .FirstOrDefaultAsync(a => a.UserName == login.UserNameOrEmail || a.Email == login.UserNameOrEmail);
+        var author = await _repository.GetAuthorByUsernameOrEmail(login.UserNameOrEmail!);
 
         if (author is null) return BadRequest("Invalid Username or Email");
 
@@ -59,9 +60,8 @@ public class AccessController : ControllerBase
 
         var author = _mapper.Map<AuthorModel>(signup);
         author.Profile.PublicEmail = author.Email;
-        
-        _blogContext.Authors.Add(author);
-        await _blogContext.SaveChangesAsync();
+
+        await _repository.AddAuthor(author);
 
         var jwt = _jwt.GenerateToken(author);
         var refresh = await _jwt.GenerateRefreshToken(author);

@@ -6,6 +6,7 @@ var config = builder.Configuration;
 
 // Add services to the DIC.
 builder.Services.AddDataServices(config);
+builder.Services.AddRepositories();
 builder.Services.AddControllers();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton(new ObjectMapperFactory().CreateMapper());

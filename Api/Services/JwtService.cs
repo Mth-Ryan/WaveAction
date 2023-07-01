@@ -3,11 +3,10 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.IdentityModel.Tokens;
-using WaveActionApi.Data;
 using WaveActionApi.Models;
+using WaveActionApi.Repositories;
 using JwtRegisteredClaimNames = Microsoft.IdentityModel.JsonWebTokens.JwtRegisteredClaimNames;
 
 namespace WaveActionApi.Services;
@@ -44,16 +43,18 @@ public class JwtService : IJwtService
 
     private readonly IConfiguration _config;
     private readonly HttpContext? _context;
-    private readonly BlogContext _blogContext;
+    private readonly IAuthorsRepository _repository;
     private readonly IDistributedCache _cacheContext;
 
-    public JwtService(IConfiguration config, IHttpContextAccessor contextAccessor,
-        BlogContext blogContext,
+    public JwtService(
+        IConfiguration config,
+        IHttpContextAccessor contextAccessor,
+        IAuthorsRepository repository,
         IDistributedCache cache)
     {
         _config = config;
         _context = contextAccessor.HttpContext;
-        _blogContext = blogContext;
+        _repository = repository;
         _cacheContext = cache;
     }
 
@@ -138,9 +139,7 @@ public class JwtService : IJwtService
     {
         var payload = GetPayloadFromRequest();
         if (payload is null) return null;
-        return await _blogContext.Authors
-            .Include(a => a.Profile)
-            .FirstOrDefaultAsync(a => a.Id == payload.Id);
+        return await _repository.GetAuthor(payload.Id);
     }
 
     public async Task SaveRefreshToken(string bareToken, JwtAuthorPayload payload)
