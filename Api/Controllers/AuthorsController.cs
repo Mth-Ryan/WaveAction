@@ -6,6 +6,7 @@ using WaveActionApi.Data;
 using WaveActionApi.Dtos.Author;
 using WaveActionApi.Dtos.Posts;
 using WaveActionApi.Dtos.Shared;
+using WaveActionApi.Dtos.Threads;
 using WaveActionApi.Models;
 using WaveActionApi.Services;
 
@@ -86,6 +87,50 @@ public class AuthorsController : ControllerBase
             Data = data!
         });
     }
+    
+    [AllowAnonymous]
+    [HttpGet("{userName}/Posts", Name = "Author Get Posts From Username")]
+    [ProducesResponseType(typeof(PaginatedDataDto<PostShortDto>), 200)]
+    public async Task<IActionResult> Posts(string userName, uint page = 0, uint pageSize = 25)
+    {
+        if (pageSize > 1000) return BadRequest("The page size exceeds the limit of 1000");
+
+        var total = await _blogContext.Posts
+            .Include(p => p.Author)
+            .Where(p => p.Author!.UserName == userName).CountAsync();
+
+        var posts = await _blogContext.Posts
+            .AsNoTracking()
+            .Include(p => p.Author)
+            .ThenInclude(a => a!.Profile)
+            .Select(p => new PostModel
+            {
+                Id = p.Id,
+                Title = p.Title,
+                Description = p.Description,
+                Tags = p.Tags,
+                AuthorId = p.AuthorId,
+                Author = p.Author,
+                ThreadId = p.ThreadId,
+                Thread = p.Thread,
+                CreatedAt = p.CreatedAt,
+                UpdatedAt = p.UpdatedAt,
+            })
+            .Where(p => p.Author!.UserName == userName)
+            .Skip((int)page * (int)pageSize)
+            .Take((int)pageSize)
+            .ToListAsync();
+
+        var data = _mapper.Map<List<PostModel>, List<PostShortDto>>(posts);
+
+        return Ok(new PaginatedDataDto<PostShortDto>
+        {
+            Page = page,
+            PageSize = pageSize,
+            ItemsTotalCount = (uint)total,
+            Data = data!
+        });
+    }
 
     [AllowAnonymous]
     [HttpGet("{id:guid}/Posts", Name = "Author Get Posts")]
@@ -121,6 +166,68 @@ public class AuthorsController : ControllerBase
         var data = _mapper.Map<List<PostModel>, List<PostShortDto>>(posts);
 
         return Ok(new PaginatedDataDto<PostShortDto>
+        {
+            Page = page,
+            PageSize = pageSize,
+            ItemsTotalCount = (uint)total,
+            Data = data!
+        });
+    }
+    
+    [AllowAnonymous]
+    [HttpGet("{id:guid}/Threads", Name = "Author Get All Threads")]
+    [ProducesResponseType(typeof(PaginatedDataDto<ThreadDto>), 200)]
+    public async Task<IActionResult> Threads(Guid id, uint page = 0, uint pageSize = 25)
+    {
+        if (pageSize > 1000) return BadRequest("The page size exceeds the limit of 1000");
+
+        var total = await _blogContext.Threads.Where(t => t.AuthorId == id).CountAsync();
+
+        var threads = await _blogContext.Threads
+            .AsNoTracking()
+            .Include(t => t.Author)
+            .ThenInclude(a => a!.Profile)
+            .OrderByDescending(t => t.CreatedAt)
+            .Where(t => t.AuthorId == id)
+            .Skip((int)page * (int)pageSize)
+            .Take((int)pageSize)
+            .ToListAsync();
+
+        var data = _mapper.Map<List<ThreadModel>, List<ThreadDto>>(threads);
+
+        return Ok(new PaginatedDataDto<ThreadDto>
+        {
+            Page = page,
+            PageSize = pageSize,
+            ItemsTotalCount = (uint)total,
+            Data = data!
+        });
+    }
+    
+    [AllowAnonymous]
+    [HttpGet("{userName}/Threads", Name = "Author Get All Threads From Username")]
+    [ProducesResponseType(typeof(PaginatedDataDto<ThreadDto>), 200)]
+    public async Task<IActionResult> Threads(string userName, uint page = 0, uint pageSize = 25)
+    {
+        if (pageSize > 1000) return BadRequest("The page size exceeds the limit of 1000");
+
+        var total = await _blogContext.Threads
+            .Include(t => t.Author)
+            .Where(t => t.Author!.UserName == userName).CountAsync();
+
+        var threads = await _blogContext.Threads
+            .AsNoTracking()
+            .Include(t => t.Author)
+            .ThenInclude(a => a!.Profile)
+            .OrderByDescending(t => t.CreatedAt)
+            .Where(t => t.Author!.UserName == userName)
+            .Skip((int)page * (int)pageSize)
+            .Take((int)pageSize)
+            .ToListAsync();
+
+        var data = _mapper.Map<List<ThreadModel>, List<ThreadDto>>(threads);
+
+        return Ok(new PaginatedDataDto<ThreadDto>
         {
             Page = page,
             PageSize = pageSize,
