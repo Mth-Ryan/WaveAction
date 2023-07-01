@@ -3,6 +3,7 @@
     import SpotlightGradient from '$lib/assets/spotlight-gradient.svg';
 	import type { ThreadShow } from "$lib/models/ThreadShow";
 	import type { PostShow } from "$lib/models/PostShow";
+	import PreviewWarning from "$lib/components/PreviewWarning.svelte";
 
     let dateFormatOptions: Intl.DateTimeFormatOptions = {
         year: 'numeric',
@@ -16,6 +17,8 @@
 <svelte:head>
     <title>Home - Wave Action</title>
 </svelte:head>
+
+<PreviewWarning />
 
 <div class="flex flex-col gap-14">
     <section class="flex flex-col md:grid grid-cols-2 gap-14">

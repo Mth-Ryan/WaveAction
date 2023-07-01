@@ -5,15 +5,19 @@
 
     export let open = false;
     export let showHeader = true;
+    export let disableEscExit = false;
+    export let disableOutClickExit = false;
 
     let enableScroll = () => {};
     let disableScroll = () => {};
 
     onMount(() => {
-        document.addEventListener("keydown", (e) => {
-            if (open && e.key == "Escape")
-                open = false;
-        });
+        if (!disableEscExit) {
+            document.addEventListener("keydown", (e) => {
+                if (open && e.key == "Escape")
+                    open = false;
+            });
+        }
 
         disableScroll = () => { document.body.style.overflow = "hidden"; };
         enableScroll = () => { document.body.style.overflow = "auto"; };
@@ -28,7 +32,7 @@
 <div 
     class="invisible absolute left-0 top-0 z-40 w-screen h-screen backdrop-blur-sm transition-opacity opacity-0"
     class:open
-    on:click={() => { open = false; }}>
+    on:click={() => { if (!disableOutClickExit) open = false; }}>
 </div>
 
 <div 
