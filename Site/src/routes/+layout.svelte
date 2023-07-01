@@ -12,7 +12,7 @@
 
 <img class="absolute top-0 left-0 z-negative max-h-screen" src={BackgroundGradient} alt="" />
 
-<div class="flex flex-col px-4 md:px-10 min-h-screen">
+<div class="flex flex-col px-6 md:px-10 min-h-screen max-w-[120ch] mx-auto">
 	<SearchMenu bind:open={searchMenu} />
 	<Sidebar bind:open={sidebar} />
 
@@ -68,13 +68,13 @@
 
 <style lang="postcss">
 	:global(html) {
-		background-color: theme(colors.slate.950);
-        color: theme(colors.slate.300);
-	}
+		@apply bg-slate-950;
+		@apply text-slate-300;
+}
 
 	:global(body) {
-		width: theme(width.screen);
-		height: theme(height.screen);
+		@apply w-screen;
+		@apply h-screen;
 	}
 	
 	:global(a) {

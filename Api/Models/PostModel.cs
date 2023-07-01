@@ -4,11 +4,14 @@ using Microsoft.EntityFrameworkCore;
 namespace WaveActionApi.Models;
 
 [Index(nameof(Title), IsUnique = true)]
+[Index(nameof(TitleSlug), IsUnique = true)]
 public class PostModel
 {
     [Key] public Guid Id { get; set; } = Guid.NewGuid();
 
     [Required] public string? Title { get; set; }
+    
+    [Required] public string? TitleSlug { get; set; }
 
     public string Description { get; set; } = "";
 
