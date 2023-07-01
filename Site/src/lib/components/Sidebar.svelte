@@ -1,18 +1,36 @@
 <script lang="ts">
     import SpotlightGradient from '$lib/assets/spotlight-gradient.svg'; 
     import { X, BookOpen, Info } from 'lucide-svelte';
+	import { onMount } from 'svelte';
 
     export let open = false;
+
+    let enableScroll = () => {};
+    let disableScroll = () => {};
+
+    onMount(() => {
+        document.addEventListener("keydown", (e) => {
+            if (open && e.key == "Escape")
+                open = false;
+        });
+
+        disableScroll = () => { document.body.style.overflow = "hidden"; };
+        enableScroll = () => { document.body.style.overflow = "auto"; };
+    })
+
+    $: {
+        open ? disableScroll() : enableScroll();
+    }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div 
-    class="invisible absolute left-0 top-0 z-30 w-screen h-screen backdrop-blur-sm transition-opacity opacity-0"
+    class="invisible fixed left-0 top-0 z-30 w-screen h-screen backdrop-blur-sm transition-opacity opacity-0"
     class:open
     on:click={() => { open = false; }}>
 </div>
 
-<aside class="invisible absolute z-40 right-0 w-72 h-full pe-4 ps-6 bg-slate-900 border-s border-slate-800 transition-opacity opacity-0 overflow-hidden" class:open>
+<aside class="invisible fixed z-40 right-0 w-72 h-full pe-4 ps-6 bg-slate-900 border-s border-slate-800 transition-opacity opacity-0 overflow-hidden" class:open>
     <div class="py-6 flex justify-end">
         <button on:click={() => { open = false; }}>
             <X />
@@ -70,5 +88,13 @@
         @apply py-1;
         @apply border-s-2;
         @apply border-slate-800;
+    }
+
+    a {
+        @apply text-slate-300;
+    }
+
+    a:visited {
+        @apply text-slate-300;
     }
 </style>
