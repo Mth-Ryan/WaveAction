@@ -139,6 +139,7 @@ public class PostsController : ControllerBase
         if (author.Id != post.AuthorId && !author.Admin) return Forbid();
 
         _mapper.Map(postCreate, post);
+        post.UpdatedAt = DateTime.UtcNow;
         await _blogContext.SaveChangesAsync();
 
         return Ok(_mapper.Map<PostDto>(post));

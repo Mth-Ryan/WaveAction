@@ -217,6 +217,7 @@ public class ThreadsController : ControllerBase
         if (author.Id != thread.AuthorId && !author.Admin) return Forbid();
 
         _mapper.Map(threadCreate, thread);
+        thread.UpdatedAt = DateTime.UtcNow;
         await _blogContext.SaveChangesAsync();
 
         return Ok(_mapper.Map<ThreadDto>(thread));
