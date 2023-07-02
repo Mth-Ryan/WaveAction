@@ -1,11 +1,10 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using WaveActionApi.Data;
 using WaveActionApi.Dtos.Posts;
 using WaveActionApi.Dtos.Shared;
 using WaveActionApi.Models;
+using WaveActionApi.Repositories;
 using WaveActionApi.Services;
 
 namespace WaveActionApi.Controllers;
@@ -16,14 +15,18 @@ namespace WaveActionApi.Controllers;
 public class PostsController : ControllerBase
 {
     private readonly ILogger<PostsController> _logger;
-    private readonly BlogContext _blogContext;
+    private readonly IPostsRepository _repository;
     private readonly IMapper _mapper;
     private readonly IJwtService _jwt;
 
-    public PostsController(ILogger<PostsController> logger, BlogContext blogContext, IMapper mapper, IJwtService jwt)
+    public PostsController(
+        ILogger<PostsController> logger,
+        IPostsRepository repository,
+        IMapper mapper,
+        IJwtService jwt)
     {
         _logger = logger;
-        _blogContext = blogContext;
+        _repository = repository;
         _mapper = mapper;
         _jwt = jwt;
     }
@@ -33,11 +36,7 @@ public class PostsController : ControllerBase
     [ProducesResponseType(typeof(PostDto), 200)]
     public async Task<IActionResult> Get(Guid id)
     {
-        var post = await _blogContext.Posts
-            .AsNoTracking()
-            .Include(p => p.Author).ThenInclude(a => a!.Profile)
-            .Include(p => p.Thread)
-            .FirstOrDefaultAsync(t => t.Id == id);
+        var post = await _repository.GetPost(id);
 
         return post is null
             ? BadRequest("Unable to find a post with the given Id")
@@ -49,11 +48,7 @@ public class PostsController : ControllerBase
     [ProducesResponseType(typeof(PostDto), 200)]
     public async Task<IActionResult> Get(string titleSlug)
     {
-        var post = await _blogContext.Posts
-            .AsNoTracking()
-            .Include(p => p.Author).ThenInclude(a => a!.Profile)
-            .Include(p => p.Thread)
-            .FirstOrDefaultAsync(t => t.TitleSlug == titleSlug);
+        var post = await _repository.GetPost(titleSlug);
 
         return post is null
             ? BadRequest("Unable to find a post with the given Title Slug")
@@ -64,40 +59,20 @@ public class PostsController : ControllerBase
     [AllowAnonymous]
     [HttpGet(Name = "Posts Get All")]
     [ProducesResponseType(typeof(PaginatedDataDto<PostShortDto>), 200)]
-    public async Task<IActionResult> Get(uint page = 0, uint pageSize = 25)
+    public async Task<IActionResult> Get([FromQuery] QueryOptions options)
     {
-        if (pageSize > 1000) return BadRequest("The page size exceeds the limit of 1000");
+        if (!ModelState.IsValid)
+            return BadRequest();
 
-        var total = await _blogContext.Posts.CountAsync();
-        var posts = await _blogContext.Posts
-            .AsNoTracking()
-            .Include(t => t.Author).ThenInclude(a => a!.Profile)
-            .Include(p => p.Thread)
-            .Select(p => new PostModel
-            {
-                Id = p.Id,
-                Title = p.Title,
-                Description = p.Description,
-                Tags = p.Tags,
-                AuthorId = p.AuthorId,
-                Author = p.Author,
-                ThreadId = p.ThreadId,
-                Thread = p.Thread,
-                CreatedAt = p.CreatedAt,
-                UpdatedAt = p.UpdatedAt,
-            })
-            .Skip((int)pageSize * (int)page)
-            .Take((int)pageSize)
-            .OrderByDescending(t => t.CreatedAt)
-            .ToListAsync();
-
+        var total = await _repository.GetPostsCount();
+        var posts = await _repository.GetPosts(options);
         var data = _mapper.Map<List<PostModel>, List<PostShortDto>>(posts);
 
         return Ok(new PaginatedDataDto<PostShortDto>
         {
             ItemsTotalCount = (uint)total,
-            Page = page,
-            PageSize = pageSize,
+            Page = options.Page,
+            PageSize = options.PageSize,
             Data = data!
         });
     }
@@ -115,8 +90,7 @@ public class PostsController : ControllerBase
         var post = _mapper.Map<PostModel>(postCreateDto);
         post.AuthorId = author.Id;
 
-        _blogContext.Posts.Add(post);
-        await _blogContext.SaveChangesAsync();
+        await _repository.Add(post);
 
         post.Author = author;
         var postOutput = _mapper.Map<PostDto>(post);
@@ -127,10 +101,7 @@ public class PostsController : ControllerBase
     [ProducesResponseType(typeof(PostDto), 200)]
     public async Task<IActionResult> Update(Guid id, [FromBody] PostCreateDto postCreate)
     {
-        var post = await _blogContext.Posts
-            .Include(p => p.Author).ThenInclude(a => a!.Profile)
-            .Include(p => p.Thread)
-            .FirstOrDefaultAsync(t => t.Id == id);
+        var post = await _repository.GetPost(id);
 
         if (post is null) return BadRequest("Unable to find a post with the given Id");
 
@@ -140,7 +111,7 @@ public class PostsController : ControllerBase
 
         _mapper.Map(postCreate, post);
         post.UpdatedAt = DateTime.UtcNow;
-        await _blogContext.SaveChangesAsync();
+        await _repository.Save();
 
         return Ok(_mapper.Map<PostDto>(post));
     }
@@ -148,17 +119,14 @@ public class PostsController : ControllerBase
     [HttpDelete("{id:guid}", Name = "Posts Delete")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var post = await _blogContext.Posts
-            .Include(p => p.Author)
-            .FirstOrDefaultAsync(t => t.Id == id);
+        var post = await _repository.GetPost(id);
         if (post is null) return BadRequest("Unable to find a post with the given Id");
 
         var author = await _jwt.GetAuthorFromRequest();
         if (author is null) return BadRequest("Unable to find the author");
         if (author.Id != post.AuthorId && !author.Admin) return Forbid();
 
-        _blogContext.Posts.Remove(post);
-        await _blogContext.SaveChangesAsync();
+        await _repository.Delete(post);
 
         return Ok();
     }

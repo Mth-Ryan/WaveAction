@@ -2,7 +2,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
-namespace WaveActionApi.Swagger;
+namespace WaveActionApi.Injections;
 
 public class ConfigureSwaggerOptions : IConfigureOptions<SwaggerGenOptions>
 {
@@ -32,5 +32,17 @@ public class ConfigureSwaggerOptions : IConfigureOptions<SwaggerGenOptions>
                 Array.Empty<string>()
             }
         });
+    }
+}
+
+public static class SwaggerInjection
+{
+    public static IServiceCollection AddSwaggerServices(this IServiceCollection services)
+    {
+        services.AddEndpointsApiExplorer();
+        services.AddSwaggerGen();
+        services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
+        
+        return services;
     }
 }
