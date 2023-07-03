@@ -2,7 +2,7 @@
 	import { X } from "lucide-svelte";
 
     export let message = "Error";
-    export let open = false;
+    export let open = true;
 </script>
 
 <div class="hidden p-3 bg-red-800 bg-opacity-10 rounded-md border border-red-900 text-red-900 text-center" class:open>

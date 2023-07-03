@@ -14,7 +14,7 @@
     <div>
         <h1 class="text-2xl text-slate-200 mb-3">Login</h1>
         {#if form?.error}
-            <ErrorBox open={true} message={form?.message} />
+            <ErrorBox message={form?.message} />
         {/if}
         <form method="POST" class="flex flex-col gap-4 mt-3 md:w-[40ch]">
             <label class="outline-input-label">
