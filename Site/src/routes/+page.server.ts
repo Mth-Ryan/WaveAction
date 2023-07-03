@@ -1,3 +1,4 @@
+import type { PageServerLoad } from './$types';
 import type { PostShow } from "$lib/models/PostShow";
 import type { ThreadShow } from "$lib/models/ThreadShow";
 
@@ -37,7 +38,7 @@ const posts = [
     },
 ] satisfies PostShow[];
 
-export async function load() {
+export const load: PageServerLoad = async () => {
     return {
         featuredThread,
         posts,

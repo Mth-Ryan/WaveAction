@@ -101,4 +101,27 @@
 	:global(.elevated-button:hover) {
 		box-shadow: 0 0 0.5rem theme(colors.slate.300);
 	}
+
+	:global(.outline-input-label) {
+		@apply flex;
+		@apply gap-2;
+		@apply items-center;
+		@apply text-slate-700;
+		@apply bg-slate-800;
+		@apply bg-opacity-50;
+		@apply border;
+		@apply border-slate-700;
+		@apply rounded-md;
+		@apply px-2;
+		@apply py-1;
+	}
+
+	:global(.outline-inner-input) {
+		@apply bg-transparent;
+		@apply border-none;
+		@apply outline-none;
+		@apply text-slate-300;
+		@apply placeholder:text-slate-700;
+		@apply w-full;
+	}
 </style>
