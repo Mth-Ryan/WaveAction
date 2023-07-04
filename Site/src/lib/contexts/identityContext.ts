@@ -1,7 +1,9 @@
-import { IdentityCookie, RefreshCookie } from "$lib/configConstants";
+import { browser } from "$app/environment";
+import { IdentityCookie, PublicUserCookie, RefreshCookie, RunMode } from "$lib/configConstants";
 import type { JWTPayload } from "$lib/models/JWTPayload";
 import type { Tokens } from "$lib/models/Tokens";
 import { getApiClient } from "$lib/services/apiClient";
+import parseDocumentCookies from "$lib/utils/parseDocumentCookies";
 import type { Cookies } from "@sveltejs/kit";
 import type { AxiosError, AxiosInstance } from "axios";
 
@@ -18,11 +20,19 @@ export class IndentityContext {
         this.apiClient = getApiClient();
     }
 
+    private clientCookieOpts = {
+        path: "/",
+        httpOnly: false,
+        sameSite: "strict" as "strict",
+        secure: false,
+        maxAge: 60 * 60 * 24 * 28, // 28 days
+    }
+
     private baseCookieOpts = {
         path: "/",
         httpOnly: true,
         sameSite: "strict" as "strict",
-        secure: false,
+        secure: RunMode == "release",
     }
 
     private browserRefreshOpts = { ...this.baseCookieOpts }
@@ -35,6 +45,15 @@ export class IndentityContext {
     private identityOpts = {
         maxAge: 60 * 12, //  12 minutes
         ...this.baseCookieOpts,
+    }
+
+    private parseJWTClaims(token: string): JWTPayload {
+        var base64Url = token.split('.')[1];
+        var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        var jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        return JSON.parse(jsonPayload) as JWTPayload;
     }
 
     private get refreshToken(): RefreshToken | undefined {
@@ -61,15 +80,26 @@ export class IndentityContext {
         this.cookiesService.set(IdentityCookie, token, this.identityOpts);
     }
 
+    private get publicUserData(): { fullName: string, avatarUrl: string } | undefined {
+        const cookie = this.cookiesService.get(PublicUserCookie);
+        return cookie ? JSON.parse(cookie) : undefined;
+    }
+
+    private set publicUserData(value: { fullName: string, avatarUrl: string }) {
+        this.cookiesService.set(PublicUserCookie, JSON.stringify(value), this.clientCookieOpts);
+    }
+
     public async login(userNameOrEmail: string, password: string, keepLogged: boolean) {
         try {
             const response = await this.apiClient.post("/Access/Login", { userNameOrEmail, password });
-            const tokens = response.data as Tokens;
+            const tokens = await response.data as Tokens;
+            const claims = this.parseJWTClaims(tokens.jwt);
             this.identityToken = tokens.jwt;
             this.refreshToken = { 
                 token: tokens.refresh,
                 kind: keepLogged ? "long_session" : "browser_session"
             };
+            this.publicUserData = {fullName: claims.fullName, avatarUrl: claims.avatarUrl};
             return null;
         } catch (error) {
             return error as AxiosError<any, any>;
@@ -88,11 +118,13 @@ export class IndentityContext {
         try {
             const response = this.apiClient.post("/Access/Signup", data);
             const tokens = (await response).data as Tokens;
+            const claims = this.parseJWTClaims(tokens.jwt);
             this.identityToken = tokens.jwt;
             this.refreshToken = { 
                 token: tokens.refresh,
                 kind: "long_session"
             };
+            this.publicUserData = {fullName: claims.fullName, avatarUrl: claims.avatarUrl};
             return null;
         } catch (error) {
             return error as AxiosError<any, any>;
@@ -100,8 +132,9 @@ export class IndentityContext {
     }
 
     public logout() {
-        this.cookiesService.set(RefreshCookie, "", { maxAge: -1 })
-        this.cookiesService.set(IdentityCookie, "", { maxAge: -1 })
+        this.cookiesService.delete(RefreshCookie, { path: '/' });
+        this.cookiesService.delete(IdentityCookie, { path: '/' });
+        this.cookiesService.delete(PublicUserCookie, { path: '/' });
     }
 
     public async refreshSession() {
@@ -110,11 +143,13 @@ export class IndentityContext {
 
         try {
             const response = await this.apiClient.post("/Access/Refresh", { refresh: this.refreshToken })
-            const tokens = response.data as Tokens;
+            const tokens = await response.data as Tokens;
             const currentKind = this.refreshToken!.kind;
+            const claims = this.parseJWTClaims(tokens.jwt);
 
             this.identityToken = tokens.jwt;
             this.refreshToken = { token: tokens.refresh, kind: currentKind };
+            this.publicUserData = {fullName: claims.fullName, avatarUrl: claims.avatarUrl};
             return null
         } catch (error) {
             return error as AxiosError<any, any>;
@@ -141,6 +176,16 @@ export class IndentityContext {
         if (token == undefined) {
             return undefined;
         }
-        return JSON.parse(atob(token.split(".")[1])) as JWTPayload;
+        return this.parseJWTClaims(token);
+    }
+
+    public static getUserPublicDataClient(): { fullName: string; avatarUrl: string } | undefined {
+        if (browser) {
+            const cookies = parseDocumentCookies(document.cookie);
+            if (cookies[PublicUserCookie])
+                return JSON.parse(cookies[PublicUserCookie]) as { fullName: string; avatarUrl: string };
+            else return undefined;
+        }
+        return undefined;
     }
 }

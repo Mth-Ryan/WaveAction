@@ -8,3 +8,9 @@ export const RefreshCookie = "refresh_token";
 
 // Identity Cookie
 export const IdentityCookie = "identity_token";
+
+// User public Cookie
+export const PublicUserCookie = "public_user_data";
+
+// Run Mode
+export const RunMode: "development" | "release" = "development";

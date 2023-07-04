@@ -38,8 +38,19 @@
 		@apply py-2;
 		@apply rounded-md;
 	}
+
+	:global(.outlined-button) {
+		@apply bg-transparent;
+		@apply text-slate-200;
+		@apply border-2;
+		@apply border-slate-200;
+		@apply font-bold;
+		@apply px-5;
+		@apply py-2;
+		@apply rounded-md;
+	}
 	
-	:global(.elevated-button:hover) {
+	:global(.elevated-button:hover, .outlined-button:hover) {
 		box-shadow: 0 0 0.5rem theme(colors.slate.300);
 	}
 

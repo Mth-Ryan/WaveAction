@@ -26,6 +26,7 @@ export const actions: Actions = {
         if (!err) {
             throw redirect(303, from);
         } else {
+            console.log(err);
             return {
                 error: true,
                 message: err.response?.data as string,
