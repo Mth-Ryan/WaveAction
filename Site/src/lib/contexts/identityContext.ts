@@ -76,6 +76,29 @@ export class IndentityContext {
         }
     }
 
+    public async signup(data: {
+        userName: string,
+        email: string,
+        password: string,
+        profile: {
+            firstName: string,
+            lastName: string
+        }
+    }) {
+        try {
+            const response = this.apiClient.post("/Access/Signup", data);
+            const tokens = (await response).data as Tokens;
+            this.identityToken = tokens.jwt;
+            this.refreshToken = { 
+                token: tokens.refresh,
+                kind: "long_session"
+            };
+            return null;
+        } catch (error) {
+            return error as AxiosError<any, any>;
+        }
+    }
+
     public logout() {
         this.cookiesService.set(RefreshCookie, "", { maxAge: -1 })
         this.cookiesService.set(IdentityCookie, "", { maxAge: -1 })
