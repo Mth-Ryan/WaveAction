@@ -17,7 +17,7 @@
 
 <LogoutDialog bind:open={dialog} />
 
-<button class="hidden fixed top-2 left-2 p-2 bg-slate-800 opacity-30 hover:opacity-100 rounded-md" class:showButton on:click={() => { open = true; }}>
+<button class="hidden fixed top-2 left-2 p-2 bg-slate-800 opacity-30 hover:opacity-100 rounded-md z-50" class:showButton on:click={() => { open = true; }}>
     <PanelLeftOpen />
 </button>
 

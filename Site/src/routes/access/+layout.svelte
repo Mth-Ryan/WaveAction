@@ -1,5 +1,5 @@
 <script>
-	import DelfaultFooter from "$lib/components/DelfaultFooter.svelte";
+	import DefaultFooter from "$lib/components/DefaultFooter.svelte";
 	import SimplifiedHeader from "$lib/components/SimplifiedHeader.svelte";
 
 </script>
@@ -11,6 +11,6 @@
             <slot />
         </main>
 
-        <DelfaultFooter />
+        <DefaultFooter />
     </div>
 </div>

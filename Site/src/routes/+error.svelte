@@ -1,7 +1,7 @@
 <script lang="ts">
     import ErrorIcon from '$lib/assets/error-icon.svg'
     import { page } from '$app/stores';
-	import DelfaultFooter from '$lib/components/DelfaultFooter.svelte';
+	import DefaultFooter from '$lib/components/DefaultFooter.svelte';
 	import SimplifiedHeader from '$lib/components/SimplifiedHeader.svelte';
     
     let error = $page.error?.message;
@@ -38,6 +38,6 @@
         </div>
 	</main>
 
-	<DelfaultFooter />
+	<DefaultFooter />
 </div>
 

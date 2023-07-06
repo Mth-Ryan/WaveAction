@@ -4,6 +4,7 @@ import type { ThreadShow } from "$lib/models/ThreadShow";
 
 const featuredThread = {
     title: "Wave Compiler",
+    slugTitle: "wave-compiler",
     description: `Creating a compiler from scratch from the lexer to his own virtual machine and bycode assembler`,
     updatedAt: new Date(2023, 1, 20),
 } satisfies ThreadShow;

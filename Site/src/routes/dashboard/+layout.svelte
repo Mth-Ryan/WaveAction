@@ -11,7 +11,7 @@
 
 <div class="w-full h-full max-h-screen flex">
     <DashSidebar mainLink={link} />
-    <main class="w-full max-h-screen overflow-y-scroll">
+    <main class="w-full max-w-[120ch] ms-auto me-auto max-h-screen overflow-y-scroll py-4 px-6">
         <slot />
     </main>
 </div>
