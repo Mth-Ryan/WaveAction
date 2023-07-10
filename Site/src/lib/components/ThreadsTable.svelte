@@ -1,5 +1,5 @@
 <script lang="ts">
-    import SpotlightGradient from '$lib/assets/spotlight-gradient.svg'; 
+  import SpotlightGradient from '$lib/assets/spotlight-gradient.svg'; 
 	import type { PaginatedData } from "$lib/models/PaginatedData";
 	import type { ThreadShow } from "$lib/models/ThreadShow";
 	import formatDate from "$lib/utils/formatDate";
