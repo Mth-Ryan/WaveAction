@@ -15,7 +15,7 @@
 
     <div slot="body" class="relative w-[40ch] p-2 overflow-hidden">
         <h3 class="text-slate-200 text-md font-bold mb-3">Info - {title}</h3>
-        <p class="text-slate-300 text-justify">
+        <p class="text-slate-400 text-sm text-justify">
             <slot />
         </p>
     </div>

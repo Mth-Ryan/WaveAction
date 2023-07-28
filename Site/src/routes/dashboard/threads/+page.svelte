@@ -4,7 +4,6 @@
 	import ThreadsTable from "$lib/components/ThreadsTable.svelte";
 	import type { PaginatedData } from "$lib/models/PaginatedData";
 	import type { ThreadShow } from "$lib/models/ThreadShow";
-	import { Info } from "lucide-svelte";
 
     let page: PaginatedData<ThreadShow> = {
         page: 0,
