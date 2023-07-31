@@ -18,7 +18,7 @@ public interface IPostsRepository
 public class PostsRepository : IPostsRepository
 {
     private readonly BlogContext _blogContext;
-    
+
     public PostsRepository(BlogContext blogContext)
     {
         this._blogContext = blogContext;
@@ -31,7 +31,7 @@ public class PostsRepository : IPostsRepository
             .Include(p => p.Thread)
             .SingleOrDefaultAsync(t => t.Id == id);
     }
-    
+
     public Task<PostModel?> GetPost(string titleSlug)
     {
         return _blogContext.Posts
@@ -40,9 +40,9 @@ public class PostsRepository : IPostsRepository
             .SingleOrDefaultAsync(t => t.TitleSlug == titleSlug);
     }
 
-    private IQueryable<PostModel> PostsQuery()
+    private IQueryable<PostModel> PostsQuery(string order)
     {
-        return _blogContext.Posts
+        var query = _blogContext.Posts
             .AsNoTracking()
             .Include(t => t.Author).ThenInclude(a => a!.Profile)
             .Include(p => p.Thread)
@@ -50,6 +50,7 @@ public class PostsRepository : IPostsRepository
             {
                 Id = p.Id,
                 Title = p.Title,
+                TitleSlug = p.TitleSlug,
                 Description = p.Description,
                 Tags = p.Tags,
                 AuthorId = p.AuthorId,
@@ -58,13 +59,47 @@ public class PostsRepository : IPostsRepository
                 Thread = p.Thread,
                 CreatedAt = p.CreatedAt,
                 UpdatedAt = p.UpdatedAt,
-            })
-            .OrderByDescending(t => t.CreatedAt);
+            });
+
+        switch (order)
+        {
+            case "title.asc":
+                query = query.OrderBy(p => p.Title);
+                break;
+
+            case "title.desc":
+                query = query.OrderByDescending(p => p.Title);
+                break;
+
+            case "updatedAt.asc":
+                query = query.OrderBy(p => p.UpdatedAt);
+                break;
+
+            case "updatedAt.desc":
+                query = query.OrderByDescending(p => p.UpdatedAt);
+                break;
+
+            case "createdAt.asc":
+                query = query.OrderBy(p => p.CreatedAt);
+                break;
+
+            default:
+                query = query.OrderByDescending(p => p.CreatedAt);
+                break;
+        }
+
+        return query;
     }
 
     public Task<List<PostModel>> GetPosts(QueryOptions options)
     {
-        return PostsQuery().Skip(options.GetSkip()).Take(options.GetTake()).ToListAsync();
+        var query = PostsQuery(options.OrderBy);
+
+        // pagination
+        query.Skip(options.GetSkip())
+            .Take(options.GetTake());
+
+        return query.ToListAsync();
     }
 
     public Task<int> GetPostsCount()
@@ -76,7 +111,7 @@ public class PostsRepository : IPostsRepository
     {
         return _blogContext.SaveChangesAsync();
     }
-    
+
     public Task<int> Add(PostModel post)
     {
         _blogContext.Posts.Add(post);

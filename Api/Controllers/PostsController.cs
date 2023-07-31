@@ -73,6 +73,7 @@ public class PostsController : ControllerBase
             ItemsTotalCount = (uint)total,
             Page = options.Page,
             PageSize = options.PageSize,
+            Order = options.OrderBy,
             Data = data!
         });
     }

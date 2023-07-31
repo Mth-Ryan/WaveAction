@@ -7,12 +7,15 @@ public class QueryOptions
 {
     [BindProperty(Name = "page")]
     public uint Page { get; set; } = 0;
-    
+
     [BindProperty(Name = "pageSize")]
     [Range(1, 1000)]
     public uint PageSize { get; set; } = 25;
 
+    [BindProperty(Name = "orderBy")]
+    public string OrderBy { get; set; } = "createdAt.desc";
+
     public int GetSkip() => (int)Page * (int)PageSize;
-    
+
     public int GetTake() => (int)PageSize;
 }
