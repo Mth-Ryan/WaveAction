@@ -44,40 +44,12 @@ public class ThreadsRepository : IThreadsRepository
 
     private IQueryable<ThreadModel> ThreadsQuery(string order)
     {
-        var query = _blogContext.Threads
+        return _blogContext.Threads
             .AsNoTracking()
             .Include(t => t.Author)
             .ThenInclude(a => a!.Profile)
-            .Select(t => t);
-
-        switch (order)
-        {
-            case "title.asc":
-                query = query.OrderBy(p => p.Title);
-                break;
-
-            case "title.desc":
-                query = query.OrderByDescending(p => p.Title);
-                break;
-
-            case "updatedAt.asc":
-                query = query.OrderBy(p => p.UpdatedAt);
-                break;
-
-            case "updatedAt.desc":
-                query = query.OrderByDescending(p => p.UpdatedAt);
-                break;
-
-            case "createdAt.asc":
-                query = query.OrderBy(p => p.CreatedAt);
-                break;
-
-            default:
-                query = query.OrderByDescending(p => p.CreatedAt);
-                break;
-        }
-
-        return query;
+            .Select(t => t)
+            .ThreadsOrder(order);
     }
 
     public Task<List<ThreadModel>> GetThreads(QueryOptions options)
@@ -90,7 +62,7 @@ public class ThreadsRepository : IThreadsRepository
 
     private IQueryable<PostModel> PostsQuery(string order)
     {
-        var query = _blogContext.Posts
+        return _blogContext.Posts
             .AsNoTracking()
             .Include(p => p.Author)
             .ThenInclude(a => a!.Profile)
@@ -107,36 +79,8 @@ public class ThreadsRepository : IThreadsRepository
                 Thread = p.Thread,
                 CreatedAt = p.CreatedAt,
                 UpdatedAt = p.UpdatedAt,
-            });
-
-        switch (order)
-        {
-            case "title.asc":
-                query = query.OrderBy(p => p.Title);
-                break;
-
-            case "title.desc":
-                query = query.OrderByDescending(p => p.Title);
-                break;
-
-            case "updatedAt.asc":
-                query = query.OrderBy(p => p.UpdatedAt);
-                break;
-
-            case "updatedAt.desc":
-                query = query.OrderByDescending(p => p.UpdatedAt);
-                break;
-
-            case "createdAt.asc":
-                query = query.OrderBy(p => p.CreatedAt);
-                break;
-
-            default:
-                query = query.OrderByDescending(p => p.CreatedAt);
-                break;
-        }
-
-        return query;
+            })
+            .PostsOrder(order);
     }
 
     public Task<List<PostModel>> GetThreadPosts(Guid id, QueryOptions options)
