@@ -70,8 +70,7 @@ public class AuthorsRepository : IAuthorsRepository
     public Task<List<AuthorModel>> GetAuthors(QueryOptions options)
     {
         return AuthorsQuery(options.OrderBy)
-            .Skip(options.GetSkip())
-            .Take(options.GetTake())
+            .Paginate(options.Page, options.PageSize)
             .ToListAsync();
     }
 
@@ -106,8 +105,7 @@ public class AuthorsRepository : IAuthorsRepository
     {
         return PostsQuery(options.OrderBy)
             .Where(p => p.AuthorId == id)
-            .Skip(options.GetSkip())
-            .Take(options.GetTake())
+            .Paginate(options.Page, options.PageSize)
             .ToListAsync();
     }
 
@@ -120,8 +118,7 @@ public class AuthorsRepository : IAuthorsRepository
     {
         return PostsQuery(options.OrderBy)
             .Where(p => p.Author!.UserName == userName)
-            .Skip(options.GetSkip())
-            .Take(options.GetTake())
+            .Paginate(options.Page, options.PageSize)
             .ToListAsync();
     }
 
@@ -146,8 +143,7 @@ public class AuthorsRepository : IAuthorsRepository
     {
         return ThreadsQuery(options.OrderBy)
             .Where(p => p.AuthorId == id)
-            .Skip(options.GetSkip())
-            .Take(options.GetTake())
+            .Paginate(options.Page, options.PageSize)
             .ToListAsync();
     }
 
@@ -160,8 +156,7 @@ public class AuthorsRepository : IAuthorsRepository
     {
         return ThreadsQuery(options.OrderBy)
             .Where(p => p.Author!.UserName == userName)
-            .Skip(options.GetSkip())
-            .Take(options.GetTake())
+            .Paginate(options.Page, options.PageSize)
             .ToListAsync();
     }
 

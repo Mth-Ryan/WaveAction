@@ -14,8 +14,4 @@ public class QueryOptions
 
     [BindProperty(Name = "orderBy")]
     public string OrderBy { get; set; } = "createdAt.desc";
-
-    public int GetSkip() => (int)Page * (int)PageSize;
-
-    public int GetTake() => (int)PageSize;
 }

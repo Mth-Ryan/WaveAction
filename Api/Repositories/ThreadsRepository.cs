@@ -55,8 +55,7 @@ public class ThreadsRepository : IThreadsRepository
     public Task<List<ThreadModel>> GetThreads(QueryOptions options)
     {
         return ThreadsQuery(options.OrderBy)
-            .Skip(options.GetSkip())
-            .Take(options.GetTake())
+            .Paginate(options.Page, options.PageSize)
             .ToListAsync();
     }
 
@@ -87,8 +86,7 @@ public class ThreadsRepository : IThreadsRepository
     {
         return PostsQuery(options.OrderBy)
             .Where(p => p.ThreadId == id)
-            .Skip(options.GetSkip())
-            .Take(options.GetTake())
+            .Paginate(options.Page, options.PageSize)
             .ToListAsync();
     }
 
@@ -101,8 +99,7 @@ public class ThreadsRepository : IThreadsRepository
     {
         return PostsQuery(options.OrderBy)
             .Where(p => p.Thread!.TitleSlug == titleSlug)
-            .Skip(options.GetSkip())
-            .Take(options.GetTake())
+            .Paginate(options.Page, options.PageSize)
             .ToListAsync();
     }
 

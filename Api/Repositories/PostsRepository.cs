@@ -42,7 +42,7 @@ public class PostsRepository : IPostsRepository
 
     private IQueryable<PostModel> PostsQuery(string order)
     {
-        var query = _blogContext.Posts
+        return _blogContext.Posts
             .AsNoTracking()
             .Include(t => t.Author).ThenInclude(a => a!.Profile)
             .Include(p => p.Thread)
@@ -59,47 +59,15 @@ public class PostsRepository : IPostsRepository
                 Thread = p.Thread,
                 CreatedAt = p.CreatedAt,
                 UpdatedAt = p.UpdatedAt,
-            });
-
-        switch (order)
-        {
-            case "title.asc":
-                query = query.OrderBy(p => p.Title);
-                break;
-
-            case "title.desc":
-                query = query.OrderByDescending(p => p.Title);
-                break;
-
-            case "updatedAt.asc":
-                query = query.OrderBy(p => p.UpdatedAt);
-                break;
-
-            case "updatedAt.desc":
-                query = query.OrderByDescending(p => p.UpdatedAt);
-                break;
-
-            case "createdAt.asc":
-                query = query.OrderBy(p => p.CreatedAt);
-                break;
-
-            default:
-                query = query.OrderByDescending(p => p.CreatedAt);
-                break;
-        }
-
-        return query;
+            })
+            .PostsOrder(order);
     }
 
     public Task<List<PostModel>> GetPosts(QueryOptions options)
     {
-        var query = PostsQuery(options.OrderBy);
-
-        // pagination
-        query.Skip(options.GetSkip())
-            .Take(options.GetTake());
-
-        return query.ToListAsync();
+        return PostsQuery(options.OrderBy)
+            .Paginate(options.Page, options.PageSize)
+            .ToListAsync();
     }
 
     public Task<int> GetPostsCount()
