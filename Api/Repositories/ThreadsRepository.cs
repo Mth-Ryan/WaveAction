@@ -22,7 +22,7 @@ public interface IThreadsRepository
 public class ThreadsRepository : IThreadsRepository
 {
     private readonly BlogContext _blogContext;
-    
+
     public ThreadsRepository(BlogContext blogContext)
     {
         this._blogContext = blogContext;
@@ -34,7 +34,7 @@ public class ThreadsRepository : IThreadsRepository
             .Include(p => p.Author).ThenInclude(a => a!.Profile)
             .SingleOrDefaultAsync(t => t.Id == id);
     }
-    
+
     public Task<ThreadModel?> GetThread(string titleSlug)
     {
         return _blogContext.Threads
@@ -42,23 +42,55 @@ public class ThreadsRepository : IThreadsRepository
             .SingleOrDefaultAsync(t => t.TitleSlug == titleSlug);
     }
 
-    private IQueryable<ThreadModel> ThreadsQuery()
+    private IQueryable<ThreadModel> ThreadsQuery(string order)
     {
-        return _blogContext.Threads
+        var query = _blogContext.Threads
             .AsNoTracking()
             .Include(t => t.Author)
             .ThenInclude(a => a!.Profile)
-            .OrderByDescending(t => t.CreatedAt);
-    }
-    
-    public Task<List<ThreadModel>> GetThreads(QueryOptions options)
-    {
-        return ThreadsQuery().Skip(options.GetSkip()).Take(options.GetTake()).ToListAsync();
+            .Select(t => t);
+
+        switch (order)
+        {
+            case "title.asc":
+                query = query.OrderBy(p => p.Title);
+                break;
+
+            case "title.desc":
+                query = query.OrderByDescending(p => p.Title);
+                break;
+
+            case "updatedAt.asc":
+                query = query.OrderBy(p => p.UpdatedAt);
+                break;
+
+            case "updatedAt.desc":
+                query = query.OrderByDescending(p => p.UpdatedAt);
+                break;
+
+            case "createdAt.asc":
+                query = query.OrderBy(p => p.CreatedAt);
+                break;
+
+            default:
+                query = query.OrderByDescending(p => p.CreatedAt);
+                break;
+        }
+
+        return query;
     }
 
-    private IQueryable<PostModel> PostsQuery()
+    public Task<List<ThreadModel>> GetThreads(QueryOptions options)
     {
-        return _blogContext.Posts
+        return ThreadsQuery(options.OrderBy)
+            .Skip(options.GetSkip())
+            .Take(options.GetTake())
+            .ToListAsync();
+    }
+
+    private IQueryable<PostModel> PostsQuery(string order)
+    {
+        var query = _blogContext.Posts
             .AsNoTracking()
             .Include(p => p.Author)
             .ThenInclude(a => a!.Profile)
@@ -75,13 +107,41 @@ public class ThreadsRepository : IThreadsRepository
                 Thread = p.Thread,
                 CreatedAt = p.CreatedAt,
                 UpdatedAt = p.UpdatedAt,
-            })
-            .OrderByDescending(p => p.CreatedAt);
+            });
+
+        switch (order)
+        {
+            case "title.asc":
+                query = query.OrderBy(p => p.Title);
+                break;
+
+            case "title.desc":
+                query = query.OrderByDescending(p => p.Title);
+                break;
+
+            case "updatedAt.asc":
+                query = query.OrderBy(p => p.UpdatedAt);
+                break;
+
+            case "updatedAt.desc":
+                query = query.OrderByDescending(p => p.UpdatedAt);
+                break;
+
+            case "createdAt.asc":
+                query = query.OrderBy(p => p.CreatedAt);
+                break;
+
+            default:
+                query = query.OrderByDescending(p => p.CreatedAt);
+                break;
+        }
+
+        return query;
     }
 
     public Task<List<PostModel>> GetThreadPosts(Guid id, QueryOptions options)
     {
-        return PostsQuery()
+        return PostsQuery(options.OrderBy)
             .Where(p => p.ThreadId == id)
             .Skip(options.GetSkip())
             .Take(options.GetTake())
@@ -92,10 +152,10 @@ public class ThreadsRepository : IThreadsRepository
     {
         return _blogContext.Posts.Where(p => p.ThreadId == id).CountAsync();
     }
-    
+
     public Task<List<PostModel>> GetThreadPosts(string titleSlug, QueryOptions options)
     {
-        return PostsQuery()
+        return PostsQuery(options.OrderBy)
             .Where(p => p.Thread!.TitleSlug == titleSlug)
             .Skip(options.GetSkip())
             .Take(options.GetTake())
@@ -119,7 +179,7 @@ public class ThreadsRepository : IThreadsRepository
     {
         return _blogContext.SaveChangesAsync();
     }
-    
+
     public Task<int> Add(ThreadModel thread)
     {
         _blogContext.Threads.Add(thread);

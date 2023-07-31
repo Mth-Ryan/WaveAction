@@ -24,7 +24,7 @@ public interface IAuthorsRepository
 public class AuthorsRepository : IAuthorsRepository
 {
     private readonly BlogContext _blogContext;
-    
+
     public AuthorsRepository(BlogContext blogContext)
     {
         this._blogContext = blogContext;
@@ -36,7 +36,7 @@ public class AuthorsRepository : IAuthorsRepository
             .Include(a => a.Profile)
             .SingleOrDefaultAsync(a => a.Id == id);
     }
-    
+
     public Task<AuthorModel?> GetAuthor(string username)
     {
         return _blogContext.Authors
@@ -44,9 +44,9 @@ public class AuthorsRepository : IAuthorsRepository
             .SingleOrDefaultAsync(a => a.UserName == username);
     }
 
-    public Task<List<AuthorModel>> GetAuthors(QueryOptions options)
+    private IQueryable<AuthorModel> AuthorsQuery(string order)
     {
-        return _blogContext.Authors
+        var query = _blogContext.Authors
             .AsNoTracking()
             .Include(a => a.Profile)
             .Select(a => new AuthorModel
@@ -63,8 +63,41 @@ public class AuthorsRepository : IAuthorsRepository
                     PublicEmail = a.Profile.PublicEmail,
                     AvatarUrl = a.Profile.AvatarUrl
                 }
-            })
-            .OrderBy(a => a.Profile.FirstName)
+            });
+
+        switch (order)
+        {
+            case "userName.asc":
+                query = query.OrderBy(a => a.UserName);
+                break;
+
+            case "userName.desc":
+                query = query.OrderByDescending(a => a.UserName);
+                break;
+
+            case "email.asc":
+                query = query.OrderBy(a => a.Email);
+                break;
+
+            case "email.desc":
+                query = query.OrderByDescending(a => a.Email);
+                break;
+
+            case "firstName.asc":
+                query = query.OrderBy(a => a.Profile!.FirstName);
+                break;
+
+            default:
+                query = query.OrderByDescending(a => a.Profile!.FirstName);
+                break;
+        }
+
+        return query;
+    }
+
+    public Task<List<AuthorModel>> GetAuthors(QueryOptions options)
+    {
+        return AuthorsQuery(options.OrderBy)
             .Skip(options.GetSkip())
             .Take(options.GetTake())
             .ToListAsync();
@@ -75,9 +108,9 @@ public class AuthorsRepository : IAuthorsRepository
         return _blogContext.Authors.CountAsync();
     }
 
-    private IQueryable<PostModel> PostsQuery()
+    private IQueryable<PostModel> PostsQuery(string order)
     {
-        return _blogContext.Posts
+        var query = _blogContext.Posts
             .AsNoTracking()
             .Include(p => p.Author)
             .ThenInclude(a => a!.Profile)
@@ -93,13 +126,41 @@ public class AuthorsRepository : IAuthorsRepository
                 Thread = p.Thread,
                 CreatedAt = p.CreatedAt,
                 UpdatedAt = p.UpdatedAt,
-            })
-            .OrderByDescending(p => p.CreatedAt);
+            });
+
+        switch (order)
+        {
+            case "title.asc":
+                query = query.OrderBy(p => p.Title);
+                break;
+
+            case "title.desc":
+                query = query.OrderByDescending(p => p.Title);
+                break;
+
+            case "updatedAt.asc":
+                query = query.OrderBy(p => p.UpdatedAt);
+                break;
+
+            case "updatedAt.desc":
+                query = query.OrderByDescending(p => p.UpdatedAt);
+                break;
+
+            case "createdAt.asc":
+                query = query.OrderBy(p => p.CreatedAt);
+                break;
+
+            default:
+                query = query.OrderByDescending(p => p.CreatedAt);
+                break;
+        }
+
+        return query;
     }
 
     public Task<List<PostModel>> GetAuthorPosts(Guid id, QueryOptions options)
     {
-        return PostsQuery()
+        return PostsQuery(options.OrderBy)
             .Where(p => p.AuthorId == id)
             .Skip(options.GetSkip())
             .Take(options.GetTake())
@@ -113,13 +174,13 @@ public class AuthorsRepository : IAuthorsRepository
 
     public Task<List<PostModel>> GetAuthorPosts(string userName, QueryOptions options)
     {
-        return PostsQuery()
+        return PostsQuery(options.OrderBy)
             .Where(p => p.Author!.UserName == userName)
             .Skip(options.GetSkip())
             .Take(options.GetTake())
             .ToListAsync();
     }
-    
+
     public Task<int> GetAuthorPostsCount(string userName)
     {
         return _blogContext.Posts
@@ -127,19 +188,48 @@ public class AuthorsRepository : IAuthorsRepository
             .Where(p => p.Author!.UserName == userName)
             .CountAsync();
     }
-    
-    private IQueryable<ThreadModel> ThreadsQuery()
+
+    private IQueryable<ThreadModel> ThreadsQuery(string order)
     {
-        return _blogContext.Threads
+        var query = _blogContext.Threads
             .AsNoTracking()
             .Include(t => t.Author)
             .ThenInclude(a => a!.Profile)
             .OrderByDescending(t => t.CreatedAt);
+
+        switch (order)
+        {
+            case "title.asc":
+                query = query.OrderBy(p => p.Title);
+                break;
+
+            case "title.desc":
+                query = query.OrderByDescending(p => p.Title);
+                break;
+
+            case "updatedAt.asc":
+                query = query.OrderBy(p => p.UpdatedAt);
+                break;
+
+            case "updatedAt.desc":
+                query = query.OrderByDescending(p => p.UpdatedAt);
+                break;
+
+            case "createdAt.asc":
+                query = query.OrderBy(p => p.CreatedAt);
+                break;
+
+            default:
+                query = query.OrderByDescending(p => p.CreatedAt);
+                break;
+        }
+
+        return query;
     }
 
     public Task<List<ThreadModel>> GetAuthorThreads(Guid id, QueryOptions options)
     {
-        return ThreadsQuery()
+        return ThreadsQuery(options.OrderBy)
             .Where(p => p.AuthorId == id)
             .Skip(options.GetSkip())
             .Take(options.GetTake())
@@ -153,13 +243,13 @@ public class AuthorsRepository : IAuthorsRepository
 
     public Task<List<ThreadModel>> GetAuthorThreads(string userName, QueryOptions options)
     {
-        return ThreadsQuery()
+        return ThreadsQuery(options.OrderBy)
             .Where(p => p.Author!.UserName == userName)
             .Skip(options.GetSkip())
             .Take(options.GetTake())
             .ToListAsync();
     }
-    
+
     public Task<int> GetAuthorThreadsCount(string userName)
     {
         return _blogContext.Threads

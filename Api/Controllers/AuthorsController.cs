@@ -32,7 +32,7 @@ public class AuthorsController : ControllerBase
         _mapper = mapper;
         _jwt = jwt;
     }
-    
+
     [AllowAnonymous]
     [HttpGet("{id:guid}", Name = "Author Get")]
     [ProducesResponseType(typeof(AuthorDto), 200)]
@@ -43,7 +43,7 @@ public class AuthorsController : ControllerBase
 
         return Ok(_mapper.Map<AuthorDto>(author));
     }
-    
+
     [AllowAnonymous]
     [HttpGet("", Name = "Author Get All")]
     [ProducesResponseType(typeof(PaginatedDataDto<AuthorShortDto>), 200)]
@@ -51,7 +51,7 @@ public class AuthorsController : ControllerBase
     {
         if (!ModelState.IsValid)
             return BadRequest();
-        
+
         var total = await _repository.GetAuthorsCount();
         var authors = await _repository.GetAuthors(options);
         var data = _mapper.Map<List<AuthorModel>, List<AuthorShortDto>>(authors);
@@ -61,10 +61,11 @@ public class AuthorsController : ControllerBase
             Page = options.Page,
             PageSize = options.PageSize,
             ItemsTotalCount = (uint)total,
+            Order = options.OrderBy,
             Data = data!
         });
     }
-    
+
     [AllowAnonymous]
     [HttpGet("{userName}/Posts", Name = "Author Get Posts From Username")]
     [ProducesResponseType(typeof(PaginatedDataDto<PostShortDto>), 200)]
@@ -72,7 +73,7 @@ public class AuthorsController : ControllerBase
     {
         if (!ModelState.IsValid)
             return BadRequest();
-        
+
         var total = await _repository.GetAuthorPostsCount(userName);
         var posts = await _repository.GetAuthorPosts(userName, options);
         var data = _mapper.Map<List<PostModel>, List<PostShortDto>>(posts);
@@ -82,6 +83,7 @@ public class AuthorsController : ControllerBase
             Page = options.Page,
             PageSize = options.PageSize,
             ItemsTotalCount = (uint)total,
+            Order = options.OrderBy,
             Data = data!
         });
     }
@@ -93,7 +95,7 @@ public class AuthorsController : ControllerBase
     {
         if (!ModelState.IsValid)
             return BadRequest();
-        
+
         var total = await _repository.GetAuthorPostsCount(id);
         var posts = await _repository.GetAuthorPosts(id, options);
         var data = _mapper.Map<List<PostModel>, List<PostShortDto>>(posts);
@@ -103,10 +105,11 @@ public class AuthorsController : ControllerBase
             Page = options.Page,
             PageSize = options.PageSize,
             ItemsTotalCount = (uint)total,
+            Order = options.OrderBy,
             Data = data!
         });
     }
-    
+
     [AllowAnonymous]
     [HttpGet("{id:guid}/Threads", Name = "Author Get All Threads")]
     [ProducesResponseType(typeof(PaginatedDataDto<ThreadDto>), 200)]
@@ -114,7 +117,7 @@ public class AuthorsController : ControllerBase
     {
         if (!ModelState.IsValid)
             return BadRequest();
-        
+
         var total = await _repository.GetAuthorThreadsCount(id);
         var threads = await _repository.GetAuthorThreads(id, options);
         var data = _mapper.Map<List<ThreadModel>, List<ThreadDto>>(threads);
@@ -124,10 +127,11 @@ public class AuthorsController : ControllerBase
             Page = options.Page,
             PageSize = options.PageSize,
             ItemsTotalCount = (uint)total,
+            Order = options.OrderBy,
             Data = data!
         });
     }
-    
+
     [AllowAnonymous]
     [HttpGet("{userName}/Threads", Name = "Author Get All Threads From Username")]
     [ProducesResponseType(typeof(PaginatedDataDto<ThreadDto>), 200)]
@@ -135,7 +139,7 @@ public class AuthorsController : ControllerBase
     {
         if (!ModelState.IsValid)
             return BadRequest();
-        
+
         var total = await _repository.GetAuthorThreadsCount(userName);
         var threads = await _repository.GetAuthorThreads(userName, options);
         var data = _mapper.Map<List<ThreadModel>, List<ThreadDto>>(threads);
@@ -145,6 +149,7 @@ public class AuthorsController : ControllerBase
             Page = options.Page,
             PageSize = options.PageSize,
             ItemsTotalCount = (uint)total,
+            Order = options.OrderBy,
             Data = data!
         });
     }

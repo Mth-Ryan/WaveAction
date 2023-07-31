@@ -61,6 +61,7 @@ public class ThreadsController : ControllerBase
             Page = options.Page,
             PageSize = options.PageSize,
             ItemsTotalCount = (uint)total,
+            Order = options.OrderBy,
             Data = data!
         });
     }
@@ -83,6 +84,7 @@ public class ThreadsController : ControllerBase
             Page = options.Page,
             PageSize = options.PageSize,
             ItemsTotalCount = (uint)total,
+            Order = options.OrderBy,
             Data = data!
         });
     }
@@ -117,6 +119,7 @@ public class ThreadsController : ControllerBase
             Page = options.Page,
             PageSize = options.PageSize,
             ItemsTotalCount = (uint)total,
+            Order = options.OrderBy,
             Data = data!
         });
     }
