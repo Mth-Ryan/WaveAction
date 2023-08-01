@@ -11,9 +11,9 @@ public interface IThreadsRepository
     Task<List<ThreadModel>> GetThreads(QueryOptions options);
     Task<List<PostModel>> GetThreadPosts(Guid id, QueryOptions options);
     Task<List<PostModel>> GetThreadPosts(string titleSlug, QueryOptions options);
-    Task<int> GetThreadPostsCount(Guid id);
-    Task<int> GetThreadPostsCount(string titleSlug);
-    Task<int> GetThreadsCount();
+    Task<int> GetThreadPostsCount(Guid id, QueryOptions options);
+    Task<int> GetThreadPostsCount(string titleSlug, QueryOptions options);
+    Task<int> GetThreadsCount(QueryOptions options);
     Task<int> Save();
     Task<int> Add(ThreadModel thread);
     Task<int> Delete(ThreadModel thread);
@@ -42,24 +42,35 @@ public class ThreadsRepository : IThreadsRepository
             .SingleOrDefaultAsync(t => t.TitleSlug == titleSlug);
     }
 
-    private IQueryable<ThreadModel> ThreadsQuery(string order)
+    private IQueryable<ThreadModel> ThreadsQuery(string? search, string order)
     {
         return _blogContext.Threads
             .AsNoTracking()
             .Include(t => t.Author)
             .ThenInclude(a => a!.Profile)
-            .Select(t => t)
+            .Select(t => new ThreadModel
+            {
+                Id = t.Id,
+                ThumbnailUrl = t.ThumbnailUrl,
+                Title = t.Title,
+                Description = t.Description,
+                AuthorId = t.AuthorId,
+                Author = t.Author,
+                CreatedAt = t.CreatedAt,
+                UpdatedAt = t.UpdatedAt,
+            })
+            .SimpleSearch(search)
             .ThreadsOrder(order);
     }
 
     public Task<List<ThreadModel>> GetThreads(QueryOptions options)
     {
-        return ThreadsQuery(options.OrderBy)
+        return ThreadsQuery(options.SimpleSearch, options.OrderBy)
             .Paginate(options.Page, options.PageSize)
             .ToListAsync();
     }
 
-    private IQueryable<PostModel> PostsQuery(string order)
+    private IQueryable<PostModel> PostsQuery(string? search, string order)
     {
         return _blogContext.Posts
             .AsNoTracking()
@@ -69,6 +80,7 @@ public class ThreadsRepository : IThreadsRepository
             .Select(p => new PostModel
             {
                 Id = p.Id,
+                ThumbnailUrl = p.ThumbnailUrl,
                 Title = p.Title,
                 Description = p.Description,
                 Tags = p.Tags,
@@ -79,41 +91,48 @@ public class ThreadsRepository : IThreadsRepository
                 CreatedAt = p.CreatedAt,
                 UpdatedAt = p.UpdatedAt,
             })
+            .SimpleSearch(search)
             .PostsOrder(order);
     }
 
     public Task<List<PostModel>> GetThreadPosts(Guid id, QueryOptions options)
     {
-        return PostsQuery(options.OrderBy)
+        return PostsQuery(options.SimpleSearch, options.OrderBy)
             .Where(p => p.ThreadId == id)
             .Paginate(options.Page, options.PageSize)
             .ToListAsync();
     }
 
-    public Task<int> GetThreadPostsCount(Guid id)
+    public Task<int> GetThreadPostsCount(Guid id, QueryOptions options)
     {
-        return _blogContext.Posts.Where(p => p.ThreadId == id).CountAsync();
+        return _blogContext.Posts
+            .SimpleSearch(options.SimpleSearch)
+            .Where(p => p.ThreadId == id)
+            .CountAsync();
     }
 
     public Task<List<PostModel>> GetThreadPosts(string titleSlug, QueryOptions options)
     {
-        return PostsQuery(options.OrderBy)
+        return PostsQuery(options.SimpleSearch, options.OrderBy)
             .Where(p => p.Thread!.TitleSlug == titleSlug)
             .Paginate(options.Page, options.PageSize)
             .ToListAsync();
     }
 
-    public Task<int> GetThreadPostsCount(string titleSlug)
+    public Task<int> GetThreadPostsCount(string titleSlug, QueryOptions options)
     {
         return _blogContext.Posts
             .Include(p => p.Thread)
+            .SimpleSearch(options.SimpleSearch)
             .Where(p => p.Thread!.TitleSlug == titleSlug)
             .CountAsync();
     }
 
-    public Task<int> GetThreadsCount()
+    public Task<int> GetThreadsCount(QueryOptions options)
     {
-        return _blogContext.Threads.CountAsync();
+        return _blogContext.Threads
+            .SimpleSearch(options.SimpleSearch)
+            .CountAsync();
     }
 
     public Task<int> Save()

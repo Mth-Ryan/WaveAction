@@ -5,6 +5,9 @@ namespace WaveActionApi.Repositories;
 
 public class QueryOptions
 {
+    [BindProperty(Name = "simpleSearch")]
+    public string? SimpleSearch { get; set; }
+
     [BindProperty(Name = "page")]
     public uint Page { get; set; } = 0;
 

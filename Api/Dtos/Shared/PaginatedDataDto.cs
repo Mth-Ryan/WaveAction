@@ -2,6 +2,7 @@ namespace WaveActionApi.Dtos.Shared;
 
 public class PaginatedDataDto<T>
 {
+    public string? Search { get; set; }
     public uint Page { get; set; }
     public uint PageSize { get; set; }
     public uint ItemsTotalCount { get; set; }
