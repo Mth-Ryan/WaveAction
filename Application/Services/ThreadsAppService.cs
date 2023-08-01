@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using WaveAction.Application.Dtos.Posts;
 using WaveAction.Application.Dtos.Shared;
 using WaveAction.Application.Dtos.Threads;
+using WaveAction.Application.Interfaces;
 using WaveAction.Domain.Common.Exceptions;
 using WaveAction.Domain.Interfaces;
 using WaveAction.Domain.Models;
@@ -10,7 +11,7 @@ using WaveAction.Domain.Specification;
 
 namespace WaveAction.Application.Services;
 
-public class ThreadsAppService
+public class ThreadsAppService : IThreadsAppService
 {
     private readonly ILogger<ThreadsAppService> _logger;
     private readonly IThreadsRepository _repository;

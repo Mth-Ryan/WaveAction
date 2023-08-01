@@ -8,10 +8,11 @@ using WaveAction.Application.Dtos.Shared;
 using WaveAction.Domain.Models;
 using WaveAction.Application.Dtos.Posts;
 using WaveAction.Application.Dtos.Threads;
+using WaveAction.Application.Interfaces;
 
 namespace WaveAction.Application.Services;
 
-public class AuthorsAppService
+public class AuthorsAppService : IAuthorsAppService
 {
     private readonly ILogger<AuthorsAppService> _logger;
     private readonly IAuthorsRepository _repository;

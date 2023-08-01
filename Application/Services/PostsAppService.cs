@@ -2,6 +2,7 @@ using AutoMapper;
 using Microsoft.Extensions.Logging;
 using WaveAction.Application.Dtos.Posts;
 using WaveAction.Application.Dtos.Shared;
+using WaveAction.Application.Interfaces;
 using WaveAction.Domain.Common.Exceptions;
 using WaveAction.Domain.Interfaces;
 using WaveAction.Domain.Models;
@@ -9,7 +10,7 @@ using WaveAction.Domain.Specification;
 
 namespace WaveAction.Application.Services;
 
-public class PostsAppService
+public class PostsAppService : IPostsAppService
 {
     private readonly ILogger<PostsAppService> _logger;
     private readonly IPostsRepository _repository;
