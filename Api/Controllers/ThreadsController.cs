@@ -52,15 +52,17 @@ public class ThreadsController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest();
 
-        var total = await _repository.GetThreadsCount();
+        var total = await _repository.GetThreadsCount(options);
         var posts = await _repository.GetThreadPosts(id, options);
         var data = _mapper.Map<List<PostModel>, List<PostShortDto>>(posts);
 
         return Ok(new PaginatedDataDto<PostShortDto>
         {
+            Search = options.SimpleSearch,
             Page = options.Page,
             PageSize = options.PageSize,
             ItemsTotalCount = (uint)total,
+            Order = options.OrderBy,
             Data = data!
         });
     }
@@ -73,16 +75,18 @@ public class ThreadsController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest();
 
-        var total = await _repository.GetThreadPostsCount(titleSlug);
+        var total = await _repository.GetThreadPostsCount(titleSlug, options);
         var posts = await _repository.GetThreadPosts(titleSlug, options);
 
         var data = _mapper.Map<List<PostModel>, List<PostShortDto>>(posts);
 
         return Ok(new PaginatedDataDto<PostShortDto>
         {
+            Search = options.SimpleSearch,
             Page = options.Page,
             PageSize = options.PageSize,
             ItemsTotalCount = (uint)total,
+            Order = options.OrderBy,
             Data = data!
         });
     }
@@ -108,15 +112,17 @@ public class ThreadsController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest();
 
-        var total = await _repository.GetThreadsCount();
+        var total = await _repository.GetThreadsCount(options);
         var threads = await _repository.GetThreads(options);
         var data = _mapper.Map<List<ThreadModel>, List<ThreadDto>>(threads);
 
         return Ok(new PaginatedDataDto<ThreadDto>
         {
+            Search = options.SimpleSearch,
             Page = options.Page,
             PageSize = options.PageSize,
             ItemsTotalCount = (uint)total,
+            Order = options.OrderBy,
             Data = data!
         });
     }

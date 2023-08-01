@@ -9,22 +9,22 @@ public interface IAuthorsRepository
     Task<AuthorModel?> GetAuthor(Guid id);
     Task<AuthorModel?> GetAuthor(string username);
     Task<List<AuthorModel>> GetAuthors(QueryOptions options);
-    Task<int> GetAuthorsCount();
+    Task<int> GetAuthorsCount(QueryOptions options);
     Task<List<PostModel>> GetAuthorPosts(Guid id, QueryOptions options);
     Task<List<PostModel>> GetAuthorPosts(string userName, QueryOptions options);
-    Task<int> GetAuthorPostsCount(Guid id);
-    Task<int> GetAuthorPostsCount(string userName);
+    Task<int> GetAuthorPostsCount(Guid id, QueryOptions options);
+    Task<int> GetAuthorPostsCount(string userName, QueryOptions options);
     Task<List<ThreadModel>> GetAuthorThreads(Guid id, QueryOptions options);
     Task<List<ThreadModel>> GetAuthorThreads(string userName, QueryOptions options);
-    Task<int> GetAuthorThreadsCount(Guid id);
-    Task<int> GetAuthorThreadsCount(string userName);
+    Task<int> GetAuthorThreadsCount(Guid id, QueryOptions options);
+    Task<int> GetAuthorThreadsCount(string userName, QueryOptions options);
     Task<int> Save();
 }
 
 public class AuthorsRepository : IAuthorsRepository
 {
     private readonly BlogContext _blogContext;
-    
+
     public AuthorsRepository(BlogContext blogContext)
     {
         this._blogContext = blogContext;
@@ -36,7 +36,7 @@ public class AuthorsRepository : IAuthorsRepository
             .Include(a => a.Profile)
             .SingleOrDefaultAsync(a => a.Id == id);
     }
-    
+
     public Task<AuthorModel?> GetAuthor(string username)
     {
         return _blogContext.Authors
@@ -44,7 +44,7 @@ public class AuthorsRepository : IAuthorsRepository
             .SingleOrDefaultAsync(a => a.UserName == username);
     }
 
-    public Task<List<AuthorModel>> GetAuthors(QueryOptions options)
+    private IQueryable<AuthorModel> AuthorsQuery(string? search, string order)
     {
         return _blogContext.Authors
             .AsNoTracking()
@@ -64,18 +64,25 @@ public class AuthorsRepository : IAuthorsRepository
                     AvatarUrl = a.Profile.AvatarUrl
                 }
             })
-            .OrderBy(a => a.Profile.FirstName)
-            .Skip(options.GetSkip())
-            .Take(options.GetTake())
+            .SimpleSearch(search)
+            .AuthorOrder(order);
+    }
+
+    public Task<List<AuthorModel>> GetAuthors(QueryOptions options)
+    {
+        return AuthorsQuery(options.SimpleSearch, options.OrderBy)
+            .Paginate(options.Page, options.PageSize)
             .ToListAsync();
     }
 
-    public Task<int> GetAuthorsCount()
+    public Task<int> GetAuthorsCount(QueryOptions options)
     {
-        return _blogContext.Authors.CountAsync();
+        return _blogContext.Authors
+            .SimpleSearch(options.SimpleSearch)
+            .CountAsync();
     }
 
-    private IQueryable<PostModel> PostsQuery()
+    private IQueryable<PostModel> PostsQuery(string? search, string order)
     {
         return _blogContext.Posts
             .AsNoTracking()
@@ -94,77 +101,83 @@ public class AuthorsRepository : IAuthorsRepository
                 CreatedAt = p.CreatedAt,
                 UpdatedAt = p.UpdatedAt,
             })
-            .OrderByDescending(p => p.CreatedAt);
+            .SimpleSearch(search)
+            .PostsOrder(order);
     }
 
     public Task<List<PostModel>> GetAuthorPosts(Guid id, QueryOptions options)
     {
-        return PostsQuery()
+        return PostsQuery(options.SimpleSearch, options.OrderBy)
             .Where(p => p.AuthorId == id)
-            .Skip(options.GetSkip())
-            .Take(options.GetTake())
+            .Paginate(options.Page, options.PageSize)
             .ToListAsync();
     }
 
-    public Task<int> GetAuthorPostsCount(Guid id)
+    public Task<int> GetAuthorPostsCount(Guid id, QueryOptions options)
     {
-        return _blogContext.Posts.Where(p => p.AuthorId == id).CountAsync();
+        return _blogContext.Posts
+            .Where(p => p.AuthorId == id)
+            .SimpleSearch(options.SimpleSearch)
+            .CountAsync();
     }
 
     public Task<List<PostModel>> GetAuthorPosts(string userName, QueryOptions options)
     {
-        return PostsQuery()
+        return PostsQuery(options.SimpleSearch, options.OrderBy)
             .Where(p => p.Author!.UserName == userName)
-            .Skip(options.GetSkip())
-            .Take(options.GetTake())
+            .Paginate(options.Page, options.PageSize)
             .ToListAsync();
     }
-    
-    public Task<int> GetAuthorPostsCount(string userName)
+
+    public Task<int> GetAuthorPostsCount(string userName, QueryOptions options)
     {
         return _blogContext.Posts
             .Include(p => p.Author)
             .Where(p => p.Author!.UserName == userName)
+            .SimpleSearch(options.SimpleSearch)
             .CountAsync();
     }
-    
-    private IQueryable<ThreadModel> ThreadsQuery()
+
+    private IQueryable<ThreadModel> ThreadsQuery(string? search, string order)
     {
         return _blogContext.Threads
             .AsNoTracking()
             .Include(t => t.Author)
             .ThenInclude(a => a!.Profile)
-            .OrderByDescending(t => t.CreatedAt);
+            .SimpleSearch(search)
+            .ThreadsOrder(order);
     }
 
     public Task<List<ThreadModel>> GetAuthorThreads(Guid id, QueryOptions options)
     {
-        return ThreadsQuery()
+        return ThreadsQuery(options.SimpleSearch, options.OrderBy)
             .Where(p => p.AuthorId == id)
-            .Skip(options.GetSkip())
-            .Take(options.GetTake())
+            .Paginate(options.Page, options.PageSize)
             .ToListAsync();
     }
 
-    public Task<int> GetAuthorThreadsCount(Guid id)
+    public Task<int> GetAuthorThreadsCount(Guid id, QueryOptions options)
     {
-        return _blogContext.Threads.Where(p => p.AuthorId == id).CountAsync();
+        return _blogContext.Threads
+            .SimpleSearch(options.SimpleSearch)
+            .Where(p => p.AuthorId == id)
+            .CountAsync();
     }
 
     public Task<List<ThreadModel>> GetAuthorThreads(string userName, QueryOptions options)
     {
-        return ThreadsQuery()
+        return ThreadsQuery(options.SimpleSearch, options.OrderBy)
             .Where(p => p.Author!.UserName == userName)
-            .Skip(options.GetSkip())
-            .Take(options.GetTake())
+            .Paginate(options.Page, options.PageSize)
             .ToListAsync();
     }
-    
-    public Task<int> GetAuthorThreadsCount(string userName)
+
+    public Task<int> GetAuthorThreadsCount(string userName, QueryOptions options)
     {
         return _blogContext.Threads
             .Include(p => p.Author)
             .Where(p => p.Author!.UserName == userName)
+            .SimpleSearch(options.SimpleSearch)
             .CountAsync();
     }
 

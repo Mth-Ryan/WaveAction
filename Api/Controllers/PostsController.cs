@@ -64,15 +64,17 @@ public class PostsController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest();
 
-        var total = await _repository.GetPostsCount();
+        var total = await _repository.GetPostsCount(options);
         var posts = await _repository.GetPosts(options);
         var data = _mapper.Map<List<PostModel>, List<PostShortDto>>(posts);
 
         return Ok(new PaginatedDataDto<PostShortDto>
         {
+            Search = options.SimpleSearch,
             ItemsTotalCount = (uint)total,
             Page = options.Page,
             PageSize = options.PageSize,
+            Order = options.OrderBy,
             Data = data!
         });
     }
