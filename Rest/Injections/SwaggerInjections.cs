@@ -2,7 +2,19 @@ using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
-namespace WaveActionApi.Injections;
+namespace WaveAction.Rest.Inejections;
+
+public static class SwaggerInjection
+{
+    public static IServiceCollection AddSwaggerServices(this IServiceCollection services)
+    {
+        services.AddEndpointsApiExplorer();
+        services.AddSwaggerGen();
+        services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
+
+        return services;
+    }
+}
 
 public class ConfigureSwaggerOptions : IConfigureOptions<SwaggerGenOptions>
 {
@@ -17,7 +29,7 @@ public class ConfigureSwaggerOptions : IConfigureOptions<SwaggerGenOptions>
             BearerFormat = "JWT",
             Scheme = "Bearer",
         });
-        
+
         options.AddSecurityRequirement(new OpenApiSecurityRequirement
         {
             {
@@ -32,17 +44,5 @@ public class ConfigureSwaggerOptions : IConfigureOptions<SwaggerGenOptions>
                 Array.Empty<string>()
             }
         });
-    }
-}
-
-public static class SwaggerInjection
-{
-    public static IServiceCollection AddSwaggerServices(this IServiceCollection services)
-    {
-        services.AddEndpointsApiExplorer();
-        services.AddSwaggerGen();
-        services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
-        
-        return services;
     }
 }

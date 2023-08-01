@@ -1,13 +1,12 @@
-using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using WaveActionApi.Dtos.Posts;
-using WaveActionApi.Dtos.Shared;
-using WaveActionApi.Models;
-using WaveActionApi.Repositories;
-using WaveActionApi.Services;
+using WaveAction.Application.Dtos.Posts;
+using WaveAction.Application.Dtos.Shared;
+using WaveAction.Application.Interfaces;
+using WaveAction.Domain.Specification;
+using WaveAction.Infrastructure.Interfaces;
 
-namespace WaveActionApi.Controllers;
+namespace WaveAction.Rest.Controllers;
 
 [Authorize]
 [ApiController]
@@ -15,19 +14,16 @@ namespace WaveActionApi.Controllers;
 public class PostsController : ControllerBase
 {
     private readonly ILogger<PostsController> _logger;
-    private readonly IPostsRepository _repository;
-    private readonly IMapper _mapper;
+    private readonly IPostsAppService _posts;
     private readonly IJwtService _jwt;
 
     public PostsController(
         ILogger<PostsController> logger,
-        IPostsRepository repository,
-        IMapper mapper,
+        IPostsAppService posts,
         IJwtService jwt)
     {
         _logger = logger;
-        _repository = repository;
-        _mapper = mapper;
+        _posts = posts;
         _jwt = jwt;
     }
 
@@ -36,25 +32,19 @@ public class PostsController : ControllerBase
     [ProducesResponseType(typeof(PostDto), 200)]
     public async Task<IActionResult> Get(Guid id)
     {
-        var post = await _repository.GetPost(id);
-
-        return post is null
-            ? BadRequest("Unable to find a post with the given Id")
-            : Ok(_mapper.Map<PostDto>(post));
+        // TODO: Better error handling
+        return Ok(await _posts.Get(id));
     }
+
 
     [AllowAnonymous]
     [HttpGet("{titleSlug}", Name = "Posts Get From Title Slug")]
     [ProducesResponseType(typeof(PostDto), 200)]
     public async Task<IActionResult> Get(string titleSlug)
     {
-        var post = await _repository.GetPost(titleSlug);
-
-        return post is null
-            ? BadRequest("Unable to find a post with the given Title Slug")
-            : Ok(_mapper.Map<PostDto>(post));
+        // TODO: Better error handling
+        return Ok(await _posts.Get(titleSlug));
     }
-
 
     [AllowAnonymous]
     [HttpGet(Name = "Posts Get All")]
@@ -64,72 +54,51 @@ public class PostsController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest();
 
-        var total = await _repository.GetPostsCount(options);
-        var posts = await _repository.GetPosts(options);
-        var data = _mapper.Map<List<PostModel>, List<PostShortDto>>(posts);
-
-        return Ok(new PaginatedDataDto<PostShortDto>
-        {
-            Search = options.SimpleSearch,
-            ItemsTotalCount = (uint)total,
-            Page = options.Page,
-            PageSize = options.PageSize,
-            Order = options.OrderBy,
-            Data = data!
-        });
+        // TODO: Better error handling
+        return Ok(await _posts.GetAll(options));
     }
 
     [HttpPost(Name = "Posts Create")]
     [ProducesResponseType(typeof(PostDto), 200)]
-    public async Task<IActionResult> Create([FromBody] PostCreateDto postCreateDto)
+    public async Task<IActionResult> Create([FromBody] PostCreateDto input)
     {
         if (!ModelState.IsValid)
             return BadRequest();
 
-        var author = await _jwt.GetAuthorFromRequest();
-        if (author is null) return BadRequest("Unable to find the author");
+        // TODO: Better error handling
+        var authorId = _jwt.GetAuthorIdFromRequest();
+        if (authorId is null) return Forbid();
 
-        var post = _mapper.Map<PostModel>(postCreateDto);
-        post.AuthorId = author.Id;
-
-        await _repository.Add(post);
-
-        post.Author = author;
-        var postOutput = _mapper.Map<PostDto>(post);
-        return Ok(postOutput);
+        // TODO: Better error handling
+        return Ok(await _posts.Create(authorId.Value, input));
     }
+
 
     [HttpPut("{id:guid}", Name = "Posts Update")]
     [ProducesResponseType(typeof(PostDto), 200)]
-    public async Task<IActionResult> Update(Guid id, [FromBody] PostCreateDto postCreate)
+    public async Task<IActionResult> Update(Guid id, [FromBody] PostCreateDto input)
     {
-        var post = await _repository.GetPost(id);
+        if (!ModelState.IsValid)
+            return BadRequest();
 
-        if (post is null) return BadRequest("Unable to find a post with the given Id");
+        // TODO: Better error handling
+        var authorId = _jwt.GetAuthorIdFromRequest();
+        if (authorId is null) return Forbid();
 
-        var author = await _jwt.GetAuthorFromRequest();
-        if (author is null) return BadRequest("Unable to find the author");
-        if (author.Id != post.AuthorId && !author.Admin) return Forbid();
-
-        _mapper.Map(postCreate, post);
-        post.UpdatedAt = DateTime.UtcNow;
-        await _repository.Save();
-
-        return Ok(_mapper.Map<PostDto>(post));
+        // TODO: Better error handling
+        return Ok(await _posts.Update(authorId.Value, id, input));
     }
+
 
     [HttpDelete("{id:guid}", Name = "Posts Delete")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var post = await _repository.GetPost(id);
-        if (post is null) return BadRequest("Unable to find a post with the given Id");
+        // TODO: Better error handling
+        var authorId = _jwt.GetAuthorIdFromRequest();
+        if (authorId is null) return Forbid();
 
-        var author = await _jwt.GetAuthorFromRequest();
-        if (author is null) return BadRequest("Unable to find the author");
-        if (author.Id != post.AuthorId && !author.Admin) return Forbid();
-
-        await _repository.Delete(post);
-
+        // TODO: Better error handling
+        await _posts.Delete(authorId.Value, id);
         return Ok();
     }
 }

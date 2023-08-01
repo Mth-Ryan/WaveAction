@@ -1,6 +1,7 @@
-using WaveActionApi.Repositories;
+using WaveAction.Domain.Interfaces;
+using WaveAction.Infrastructure.Repositories;
 
-namespace WaveActionApi.Injections;
+namespace WaveAction.Rest.Inejections;
 
 public static class RepositoriesInjection
 {

@@ -1,14 +1,13 @@
-using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using WaveActionApi.Dtos.Posts;
-using WaveActionApi.Dtos.Shared;
-using WaveActionApi.Dtos.Threads;
-using WaveActionApi.Models;
-using WaveActionApi.Repositories;
-using WaveActionApi.Services;
+using WaveAction.Application.Dtos.Posts;
+using WaveAction.Application.Dtos.Shared;
+using WaveAction.Application.Dtos.Threads;
+using WaveAction.Application.Interfaces;
+using WaveAction.Domain.Specification;
+using WaveAction.Infrastructure.Interfaces;
 
-namespace WaveActionApi.Controllers;
+namespace WaveAction.Rest.Controllers;
 
 [Authorize]
 [ApiController]
@@ -16,19 +15,16 @@ namespace WaveActionApi.Controllers;
 public class ThreadsController : ControllerBase
 {
     private readonly ILogger<ThreadsController> _logger;
-    private readonly IThreadsRepository _repository;
-    private readonly IMapper _mapper;
+    private readonly IThreadsAppService _threads;
     private readonly IJwtService _jwt;
 
     public ThreadsController(
         ILogger<ThreadsController> logger,
-        IThreadsRepository repository,
-        IMapper mapper,
+        IThreadsAppService threads,
         IJwtService jwt)
     {
         _logger = logger;
-        _repository = repository;
-        _mapper = mapper;
+        _threads = threads;
         _jwt = jwt;
     }
 
@@ -37,11 +33,17 @@ public class ThreadsController : ControllerBase
     [ProducesResponseType(typeof(ThreadDto), 200)]
     public async Task<IActionResult> Get(Guid id)
     {
-        var thread = await _repository.GetThread(id);
+        // TODO: Better Error Handling
+        return Ok(await _threads.Get(id));
+    }
 
-        return thread is null
-            ? BadRequest("Unable to find a thread with the given Id")
-            : Ok(_mapper.Map<ThreadDto>(thread));
+    [AllowAnonymous]
+    [HttpGet("{titleSlug}", Name = "Threads Get From Title Slug")]
+    [ProducesResponseType(typeof(ThreadDto), 200)]
+    public async Task<IActionResult> Get(string titleSlug)
+    {
+        // TODO: Better Error Handling
+        return Ok(await _threads.Get(titleSlug));
     }
 
     [AllowAnonymous]
@@ -52,19 +54,8 @@ public class ThreadsController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest();
 
-        var total = await _repository.GetThreadsCount(options);
-        var posts = await _repository.GetThreadPosts(id, options);
-        var data = _mapper.Map<List<PostModel>, List<PostShortDto>>(posts);
-
-        return Ok(new PaginatedDataDto<PostShortDto>
-        {
-            Search = options.SimpleSearch,
-            Page = options.Page,
-            PageSize = options.PageSize,
-            ItemsTotalCount = (uint)total,
-            Order = options.OrderBy,
-            Data = data!
-        });
+        // TODO: Better Error Handling
+        return Ok(await _threads.GetPosts(id, options));
     }
 
     [AllowAnonymous]
@@ -75,34 +66,9 @@ public class ThreadsController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest();
 
-        var total = await _repository.GetThreadPostsCount(titleSlug, options);
-        var posts = await _repository.GetThreadPosts(titleSlug, options);
-
-        var data = _mapper.Map<List<PostModel>, List<PostShortDto>>(posts);
-
-        return Ok(new PaginatedDataDto<PostShortDto>
-        {
-            Search = options.SimpleSearch,
-            Page = options.Page,
-            PageSize = options.PageSize,
-            ItemsTotalCount = (uint)total,
-            Order = options.OrderBy,
-            Data = data!
-        });
+        // TODO: Better Error Handling
+        return Ok(await _threads.GetPosts(titleSlug, options));
     }
-
-    [AllowAnonymous]
-    [HttpGet("{titleSlug}", Name = "Threads Get From Title Slug")]
-    [ProducesResponseType(typeof(ThreadDto), 200)]
-    public async Task<IActionResult> Get(string titleSlug)
-    {
-        var thread = await _repository.GetThread(titleSlug);
-
-        return thread is null
-            ? BadRequest("Unable to find a thread with the given Title")
-            : Ok(_mapper.Map<ThreadDto>(thread));
-    }
-
 
     [AllowAnonymous]
     [HttpGet(Name = "Threads Get All")]
@@ -112,74 +78,48 @@ public class ThreadsController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest();
 
-        var total = await _repository.GetThreadsCount(options);
-        var threads = await _repository.GetThreads(options);
-        var data = _mapper.Map<List<ThreadModel>, List<ThreadDto>>(threads);
-
-        return Ok(new PaginatedDataDto<ThreadDto>
-        {
-            Search = options.SimpleSearch,
-            Page = options.Page,
-            PageSize = options.PageSize,
-            ItemsTotalCount = (uint)total,
-            Order = options.OrderBy,
-            Data = data!
-        });
+        return Ok(await _threads.GetAll(options));
     }
 
     [HttpPost(Name = "Threads Create")]
     [ProducesResponseType(typeof(ThreadDto), 200)]
-    public async Task<IActionResult> Create([FromBody] ThreadCreateDto threadCreate)
+    public async Task<IActionResult> Create([FromBody] ThreadCreateDto input)
     {
         if (!ModelState.IsValid)
             return BadRequest();
 
-        var author = await _jwt.GetAuthorFromRequest();
-        if (author is null) return BadRequest("Unable to find the author");
+        // TODO: Better error handling
+        var authorId = _jwt.GetAuthorIdFromRequest();
+        if (authorId is null) return Forbid();
 
-        var thread = _mapper.Map<ThreadModel>(threadCreate);
-        thread.AuthorId = author.Id;
-
-        await _repository.Add(thread);
-
-        thread.Author = author;
-        var threadOutput = _mapper.Map<ThreadDto>(thread);
-        return Ok(threadOutput);
+        // TODO: Better error handling
+        return Ok(await _threads.Create(authorId.Value, input));
     }
 
     [HttpPut("{id:guid}", Name = "Threads Update")]
     [ProducesResponseType(typeof(ThreadDto), 200)]
-    public async Task<IActionResult> Update(Guid id, [FromBody] ThreadCreateDto threadCreate)
+    public async Task<IActionResult> Update(Guid id, [FromBody] ThreadCreateDto input)
     {
         if (!ModelState.IsValid)
             return BadRequest();
 
-        var thread = await _repository.GetThread(id);
+        // TODO: Better error handling
+        var authorId = _jwt.GetAuthorIdFromRequest();
+        if (authorId is null) return Forbid();
 
-        if (thread is null) return BadRequest("Unable to find a thread with the given Id");
-
-        var author = await _jwt.GetAuthorFromRequest();
-        if (author is null) return BadRequest("Unable to find the author");
-        if (author.Id != thread.AuthorId && !author.Admin) return Forbid();
-
-        _mapper.Map(threadCreate, thread);
-        thread.UpdatedAt = DateTime.UtcNow;
-        await _repository.Save();
-
-        return Ok(_mapper.Map<ThreadDto>(thread));
+        // TODO: Better error handling
+        return Ok(await _threads.Update(authorId.Value, id, input));
     }
 
     [HttpDelete("{id:guid}", Name = "Threads Delete")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var thread = await _repository.GetThread(id);
-        if (thread is null) return BadRequest("Unable to find a thread with the given Id");
+        // TODO: Better error handling
+        var authorId = _jwt.GetAuthorIdFromRequest();
+        if (authorId is null) return Forbid();
 
-        var author = await _jwt.GetAuthorFromRequest();
-        if (author is null) return BadRequest("Unable to find the author");
-        if (author.Id != thread.AuthorId && !author.Admin) return Forbid();
-
-        await _repository.Delete(thread);
+        // TODO: Better error handling
+        await _threads.Delete(authorId.Value, id);
 
         return Ok();
     }

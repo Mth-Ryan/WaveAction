@@ -1,12 +1,13 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
-using WaveActionApi.Dtos.Access;
-using WaveActionApi.Models;
-using WaveActionApi.Repositories;
-using WaveActionApi.Services;
+using WaveAction.Application.Dtos;
+using WaveAction.Application.Dtos.Access;
+using WaveAction.Domain.Interfaces;
+using WaveAction.Domain.Models;
+using WaveAction.Infrastructure.Interfaces;
 using BC = BCrypt.Net.BCrypt;
 
-namespace WaveActionApi.Controllers;
+namespace WaveAction.Rest.Controllers;
 
 [ApiController]
 [Route("[controller]/[action]")]
@@ -45,10 +46,10 @@ public class AccessController : ControllerBase
 
         var jwt = _jwt.GenerateToken(author);
         var refresh = await _jwt.GenerateRefreshToken(author);
-        
-        return (jwt is null  || refresh is null)
-            ? StatusCode(500, "Unable to create te JWT or Refresh Token") 
-            : Ok(new TokensDto { Jwt = jwt, Refresh = refresh});
+
+        return (jwt is null || refresh is null)
+            ? StatusCode(500, "Unable to create te JWT or Refresh Token")
+            : Ok(new TokensDto { Jwt = jwt, Refresh = refresh });
     }
 
     [HttpPost(Name = "Signup")]
@@ -65,10 +66,10 @@ public class AccessController : ControllerBase
 
         var jwt = _jwt.GenerateToken(author);
         var refresh = await _jwt.GenerateRefreshToken(author);
-        
-        return (jwt is null  || refresh is null)
-            ? StatusCode(500, "Unable to create te JWT or Refresh Token") 
-            : Ok(new TokensDto { Jwt = jwt, Refresh = refresh});
+
+        return (jwt is null || refresh is null)
+            ? StatusCode(500, "Unable to create te JWT or Refresh Token")
+            : Ok(new TokensDto { Jwt = jwt, Refresh = refresh });
     }
 
     [HttpPost(Name = "Refresh")]
@@ -77,11 +78,11 @@ public class AccessController : ControllerBase
     {
         if (!ModelState.IsValid)
             return BadRequest();
-        
+
         var jwt = await _jwt.RefreshJwt(refresh.Refresh);
-        
+
         return (jwt is null)
-            ? StatusCode(500, "Unable to create te JWT") 
-            : Ok(new TokensDto { Jwt = jwt, Refresh = refresh.Refresh});
+            ? StatusCode(500, "Unable to create te JWT")
+            : Ok(new TokensDto { Jwt = jwt, Refresh = refresh.Refresh });
     }
 }

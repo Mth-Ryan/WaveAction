@@ -1,11 +1,12 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using WaveActionApi.Services;
+using WaveAction.Infrastructure.Interfaces;
+using WaveAction.Infrastructure.Services;
 
-namespace WaveActionApi.Injections;
+namespace WaveAction.Rest.Inejections;
 
-public static class AuthenticationInjection
+public static class JwtAuthenticationInjection
 {
     public static IServiceCollection AddAuthenticationServices(this IServiceCollection services, IConfigurationRoot config)
     {

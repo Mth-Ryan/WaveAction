@@ -1,8 +1,8 @@
-using WaveActionApi.Data;
+using WaveAction.Infrastructure.Contexts;
 
-namespace WaveActionApi.Injections;
+namespace WaveAction.Rest.Inejections;
 
-public static class DataInjection
+public static class DataInjections
 {
     public static IServiceCollection AddDataServices(this IServiceCollection services, IConfigurationRoot config)
     {

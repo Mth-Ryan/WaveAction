@@ -1,15 +1,14 @@
-using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using WaveActionApi.Dtos.Author;
-using WaveActionApi.Dtos.Posts;
-using WaveActionApi.Dtos.Shared;
-using WaveActionApi.Dtos.Threads;
-using WaveActionApi.Models;
-using WaveActionApi.Repositories;
-using WaveActionApi.Services;
+using WaveAction.Application.Dtos.Author;
+using WaveAction.Application.Dtos.Posts;
+using WaveAction.Application.Dtos.Shared;
+using WaveAction.Application.Dtos.Threads;
+using WaveAction.Application.Interfaces;
+using WaveAction.Domain.Specification;
+using WaveAction.Infrastructure.Interfaces;
 
-namespace WaveActionApi.Controllers;
+namespace WaveAction.Rest.Controllers;
 
 [Authorize]
 [ApiController]
@@ -17,19 +16,16 @@ namespace WaveActionApi.Controllers;
 public class AuthorsController : ControllerBase
 {
     private readonly ILogger<AuthorsController> _logger;
-    private readonly IAuthorsRepository _repository;
-    private readonly IMapper _mapper;
+    private readonly IAuthorsAppService _authors;
     private readonly IJwtService _jwt;
 
     public AuthorsController(
         ILogger<AuthorsController> logger,
-        IAuthorsRepository repository,
-        IMapper mapper,
+        IAuthorsAppService authors,
         IJwtService jwt)
     {
         _logger = logger;
-        _repository = repository;
-        _mapper = mapper;
+        _authors = authors;
         _jwt = jwt;
     }
 
@@ -38,10 +34,8 @@ public class AuthorsController : ControllerBase
     [ProducesResponseType(typeof(AuthorDto), 200)]
     public async Task<IActionResult> Get(Guid id)
     {
-        var author = await _repository.GetAuthor(id);
-        if (author is null) return BadRequest("Unable to find a author with the given Id");
-
-        return Ok(_mapper.Map<AuthorDto>(author));
+        // TODO: Better error handling
+        return Ok(await _authors.Get(id));
     }
 
     [AllowAnonymous]
@@ -52,19 +46,8 @@ public class AuthorsController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest();
 
-        var total = await _repository.GetAuthorsCount(options);
-        var authors = await _repository.GetAuthors(options);
-        var data = _mapper.Map<List<AuthorModel>, List<AuthorShortDto>>(authors);
-
-        return Ok(new PaginatedDataDto<AuthorShortDto>
-        {
-            Search = options.SimpleSearch,
-            Page = options.Page,
-            PageSize = options.PageSize,
-            ItemsTotalCount = (uint)total,
-            Order = options.OrderBy,
-            Data = data!
-        });
+        // TODO: Better error handling
+        return Ok(await _authors.GetAll(options));
     }
 
     [AllowAnonymous]
@@ -75,19 +58,8 @@ public class AuthorsController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest();
 
-        var total = await _repository.GetAuthorPostsCount(userName, options);
-        var posts = await _repository.GetAuthorPosts(userName, options);
-        var data = _mapper.Map<List<PostModel>, List<PostShortDto>>(posts);
-
-        return Ok(new PaginatedDataDto<PostShortDto>
-        {
-            Search = options.SimpleSearch,
-            Page = options.Page,
-            PageSize = options.PageSize,
-            ItemsTotalCount = (uint)total,
-            Order = options.OrderBy,
-            Data = data!
-        });
+        // TODO: Better error handling
+        return Ok(await _authors.GetPosts(userName, options));
     }
 
     [AllowAnonymous]
@@ -98,19 +70,8 @@ public class AuthorsController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest();
 
-        var total = await _repository.GetAuthorPostsCount(id, options);
-        var posts = await _repository.GetAuthorPosts(id, options);
-        var data = _mapper.Map<List<PostModel>, List<PostShortDto>>(posts);
-
-        return Ok(new PaginatedDataDto<PostShortDto>
-        {
-            Search = options.SimpleSearch,
-            Page = options.Page,
-            PageSize = options.PageSize,
-            ItemsTotalCount = (uint)total,
-            Order = options.OrderBy,
-            Data = data!
-        });
+        // TODO: Better error handling
+        return Ok(await _authors.GetPosts(id, options));
     }
 
     [AllowAnonymous]
@@ -121,19 +82,8 @@ public class AuthorsController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest();
 
-        var total = await _repository.GetAuthorThreadsCount(id, options);
-        var threads = await _repository.GetAuthorThreads(id, options);
-        var data = _mapper.Map<List<ThreadModel>, List<ThreadDto>>(threads);
-
-        return Ok(new PaginatedDataDto<ThreadDto>
-        {
-            Search = options.SimpleSearch,
-            Page = options.Page,
-            PageSize = options.PageSize,
-            ItemsTotalCount = (uint)total,
-            Order = options.OrderBy,
-            Data = data!
-        });
+        // TODO: Better error handling
+        return Ok(await _authors.GetThreads(id, options));
     }
 
     [AllowAnonymous]
@@ -144,31 +94,19 @@ public class AuthorsController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest();
 
-        var total = await _repository.GetAuthorThreadsCount(userName, options);
-        var threads = await _repository.GetAuthorThreads(userName, options);
-        var data = _mapper.Map<List<ThreadModel>, List<ThreadDto>>(threads);
-
-        return Ok(new PaginatedDataDto<ThreadDto>
-        {
-            Search = options.SimpleSearch,
-            Page = options.Page,
-            PageSize = options.PageSize,
-            ItemsTotalCount = (uint)total,
-            Order = options.OrderBy,
-            Data = data!
-        });
+        // TODO: Better error handling
+        return Ok(await _authors.GetThreads(userName, options));
     }
 
     [HttpPut("Profile", Name = "Author Profile Edit")]
     [ProducesResponseType(typeof(AuthorDto), 200)]
-    public async Task<IActionResult> EditProfile([FromBody] AuthorProfileDto profile)
+    public async Task<IActionResult> EditProfile([FromBody] AuthorProfileDto input)
     {
-        var author = await _jwt.GetAuthorFromRequest();
-        if (author is null) return BadRequest("Unable to find the user");
+        // TODO: Better error handling
+        var authorId = _jwt.GetAuthorIdFromRequest();
+        if (authorId is null) return Forbid();
 
-        _mapper.Map(profile, author.Profile);
-        await _repository.Save();
-
-        return Ok(_mapper.Map<AuthorDto>(author));
+        // TODO: Better error handling
+        return Ok(await _authors.UpdateProfile(authorId.Value, input));
     }
 }
