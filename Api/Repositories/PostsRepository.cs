@@ -9,7 +9,7 @@ public interface IPostsRepository
     Task<PostModel?> GetPost(Guid id);
     Task<PostModel?> GetPost(string titleSlug);
     Task<List<PostModel>> GetPosts(QueryOptions options);
-    Task<int> GetPostsCount();
+    Task<int> GetPostsCount(QueryOptions options);
     Task<int> Save();
     Task<int> Add(PostModel post);
     Task<int> Delete(PostModel post);
@@ -40,7 +40,7 @@ public class PostsRepository : IPostsRepository
             .SingleOrDefaultAsync(t => t.TitleSlug == titleSlug);
     }
 
-    private IQueryable<PostModel> PostsQuery(string order)
+    private IQueryable<PostModel> PostsQuery(string? search, string order)
     {
         return _blogContext.Posts
             .AsNoTracking()
@@ -60,19 +60,22 @@ public class PostsRepository : IPostsRepository
                 CreatedAt = p.CreatedAt,
                 UpdatedAt = p.UpdatedAt,
             })
+            .SimpleSearch(search)
             .PostsOrder(order);
     }
 
     public Task<List<PostModel>> GetPosts(QueryOptions options)
     {
-        return PostsQuery(options.OrderBy)
+        return PostsQuery(options.SimpleSearch, options.OrderBy)
             .Paginate(options.Page, options.PageSize)
             .ToListAsync();
     }
 
-    public Task<int> GetPostsCount()
+    public Task<int> GetPostsCount(QueryOptions options)
     {
-        return _blogContext.Posts.CountAsync();
+        return _blogContext.Posts
+            .SimpleSearch(options.SimpleSearch)
+            .CountAsync();
     }
 
     public Task<int> Save()

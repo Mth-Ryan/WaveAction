@@ -52,12 +52,13 @@ public class AuthorsController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest();
 
-        var total = await _repository.GetAuthorsCount();
+        var total = await _repository.GetAuthorsCount(options);
         var authors = await _repository.GetAuthors(options);
         var data = _mapper.Map<List<AuthorModel>, List<AuthorShortDto>>(authors);
 
         return Ok(new PaginatedDataDto<AuthorShortDto>
         {
+            Search = options.SimpleSearch,
             Page = options.Page,
             PageSize = options.PageSize,
             ItemsTotalCount = (uint)total,
@@ -74,12 +75,13 @@ public class AuthorsController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest();
 
-        var total = await _repository.GetAuthorPostsCount(userName);
+        var total = await _repository.GetAuthorPostsCount(userName, options);
         var posts = await _repository.GetAuthorPosts(userName, options);
         var data = _mapper.Map<List<PostModel>, List<PostShortDto>>(posts);
 
         return Ok(new PaginatedDataDto<PostShortDto>
         {
+            Search = options.SimpleSearch,
             Page = options.Page,
             PageSize = options.PageSize,
             ItemsTotalCount = (uint)total,
@@ -96,12 +98,13 @@ public class AuthorsController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest();
 
-        var total = await _repository.GetAuthorPostsCount(id);
+        var total = await _repository.GetAuthorPostsCount(id, options);
         var posts = await _repository.GetAuthorPosts(id, options);
         var data = _mapper.Map<List<PostModel>, List<PostShortDto>>(posts);
 
         return Ok(new PaginatedDataDto<PostShortDto>
         {
+            Search = options.SimpleSearch,
             Page = options.Page,
             PageSize = options.PageSize,
             ItemsTotalCount = (uint)total,
@@ -118,12 +121,13 @@ public class AuthorsController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest();
 
-        var total = await _repository.GetAuthorThreadsCount(id);
+        var total = await _repository.GetAuthorThreadsCount(id, options);
         var threads = await _repository.GetAuthorThreads(id, options);
         var data = _mapper.Map<List<ThreadModel>, List<ThreadDto>>(threads);
 
         return Ok(new PaginatedDataDto<ThreadDto>
         {
+            Search = options.SimpleSearch,
             Page = options.Page,
             PageSize = options.PageSize,
             ItemsTotalCount = (uint)total,
@@ -140,12 +144,13 @@ public class AuthorsController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest();
 
-        var total = await _repository.GetAuthorThreadsCount(userName);
+        var total = await _repository.GetAuthorThreadsCount(userName, options);
         var threads = await _repository.GetAuthorThreads(userName, options);
         var data = _mapper.Map<List<ThreadModel>, List<ThreadDto>>(threads);
 
         return Ok(new PaginatedDataDto<ThreadDto>
         {
+            Search = options.SimpleSearch,
             Page = options.Page,
             PageSize = options.PageSize,
             ItemsTotalCount = (uint)total,
