@@ -22,17 +22,20 @@
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
     </ItemGroup>
-
-    <ItemGroup>
-      <ProjectReference Include="..\Api\WaveActionApi.csproj" />
-    </ItemGroup>
-
+    
     <ItemGroup>
       <Compile Remove="UnitTest1.cs" />
     </ItemGroup>
 
     <ItemGroup>
       <Folder Include="Controllers\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Domain\Domain.csproj" />
+      <ProjectReference Include="..\Application\Application.csproj" />
+      <ProjectReference Include="..\Infrastructure\Infrastructure.csproj" />
+      <ProjectReference Include="..\Rest\Rest.csproj" />
     </ItemGroup>
 
 </Project>
