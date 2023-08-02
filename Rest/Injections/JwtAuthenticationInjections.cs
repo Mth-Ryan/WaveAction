@@ -30,7 +30,8 @@ public static class JwtAuthenticationInjection
             };
         });
         services.AddAuthorization();
-        services.AddScoped<IJwtService, JwtService>();
+        services.AddTransient<IJwtService, JwtService>();
+        services.AddTransient<IRefreshTokenService, RefreshTokenService>();
 
         return services;
     }

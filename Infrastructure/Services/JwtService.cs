@@ -1,10 +1,7 @@
 using JwtRegisteredClaimNames = Microsoft.IdentityModel.JsonWebTokens.JwtRegisteredClaimNames;
 using System.Security.Claims;
-using System.Security.Cryptography;
 using System.Text;
-using System.Text.Json;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using WaveAction.Infrastructure.Interfaces;
@@ -18,26 +15,22 @@ namespace WaveAction.Infrastructure.Services;
 public class JwtService : IJwtService
 {
     private static readonly TimeSpan JwtLife = TimeSpan.FromMinutes(15);
-    private static readonly TimeSpan RefreshTokenLife = TimeSpan.FromDays(31);
 
     private readonly IConfiguration _config;
     private readonly HttpContext? _context;
     private readonly IAuthorsRepository _repository;
-    private readonly IDistributedCache _cacheContext;
 
     public JwtService(
         IConfiguration config,
         IHttpContextAccessor contextAccessor,
-        IAuthorsRepository repository,
-        IDistributedCache cache)
+        IAuthorsRepository repository)
     {
         _config = config;
         _context = contextAccessor.HttpContext;
         _repository = repository;
-        _cacheContext = cache;
     }
 
-    private static JwtAuthorPayload CreatePayloadFromAuthor(AuthorModel author)
+    public JwtAuthorPayload CreatePayloadFromAuthor(AuthorModel author)
     {
         return new JwtAuthorPayload
         {
@@ -125,58 +118,5 @@ public class JwtService : IJwtService
         var id = GetAuthorIdFromRequest();
         if (id is null) return null;
         return await _repository.GetAuthor(id.Value);
-    }
-
-    public async Task SaveRefreshToken(string bareToken, JwtAuthorPayload payload)
-    {
-        var value = JsonSerializer.Serialize(payload);
-        var options = new DistributedCacheEntryOptions
-        {
-            AbsoluteExpirationRelativeToNow = RefreshTokenLife,
-        };
-        await _cacheContext.SetAsync(bareToken, Encoding.UTF8.GetBytes(value), options);
-    }
-
-    public async Task RemoveRefreshToken(string token)
-    {
-        await _cacheContext.RemoveAsync(token);
-    }
-
-    public async Task<JwtAuthorPayload?> GetPayloadFromRefreshToken(string token)
-    {
-        var bareValue = await _cacheContext.GetAsync(token);
-        if (bareValue is null) return null;
-
-        var payload = JsonSerializer.Deserialize<JwtAuthorPayload>(Encoding.UTF8.GetString(bareValue));
-        return payload;
-    }
-
-    public async Task<string?> GenerateRefreshToken(JwtAuthorPayload payload)
-    {
-        var randomNumber = new byte[32];
-        using var rng = RandomNumberGenerator.Create();
-        rng.GetBytes(randomNumber);
-        var bareToken = Convert.ToBase64String(randomNumber);
-        await SaveRefreshToken(bareToken, payload);
-        return bareToken;
-    }
-
-    public async Task<string?> GenerateRefreshToken(AuthorModel author)
-    {
-        return await GenerateRefreshToken(CreatePayloadFromAuthor(author));
-    }
-
-    public async Task<string?> RefreshJwt(string refreshToken)
-    {
-        var payload = await GetPayloadFromRefreshToken(refreshToken);
-        if (payload is null) return null;
-
-        var author = await _repository.GetAuthor(payload.Id);
-        if (author is null) return null;
-
-        var jwt = GenerateToken(author);
-        await _cacheContext.RefreshAsync(refreshToken);
-
-        return jwt;
     }
 }

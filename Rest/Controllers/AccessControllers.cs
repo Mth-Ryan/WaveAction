@@ -12,15 +12,18 @@ public class AccessController : ControllerBase
     private readonly ILogger<AccessController> _logger;
     private readonly IAccessAppService _access;
     private readonly IJwtService _jwt;
+    private readonly IRefreshTokenService _refresh;
 
     public AccessController(
         ILogger<AccessController> logger,
         IAccessAppService access,
-        IJwtService jwt)
+        IJwtService jwt,
+        IRefreshTokenService refresh)
     {
         _logger = logger;
         _access = access;
         _jwt = jwt;
+        _refresh = refresh;
     }
 
     [HttpPost(Name = "Login")]
@@ -34,7 +37,7 @@ public class AccessController : ControllerBase
         var author = await _access.Login(login);
 
         var jwt = _jwt.GenerateToken(author);
-        var refresh = await _jwt.GenerateRefreshToken(author);
+        var refresh = await _refresh.GenerateRefreshToken(author);
 
         return (jwt is null || refresh is null)
             ? StatusCode(500, "Unable to create te JWT or Refresh Token")
@@ -51,7 +54,7 @@ public class AccessController : ControllerBase
         var author = await _access.Signup(signup);
 
         var jwt = _jwt.GenerateToken(author);
-        var refresh = await _jwt.GenerateRefreshToken(author);
+        var refresh = await _refresh.GenerateRefreshToken(author);
 
         return (jwt is null || refresh is null)
             ? StatusCode(500, "Unable to create te JWT or Refresh Token")
@@ -65,7 +68,7 @@ public class AccessController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest();
 
-        var jwt = await _jwt.RefreshJwt(refresh.Refresh);
+        var jwt = await _refresh.RefreshJwt(refresh.Refresh);
 
         return (jwt is null)
             ? StatusCode(500, "Unable to create te JWT")
