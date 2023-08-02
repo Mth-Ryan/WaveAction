@@ -71,7 +71,17 @@ public class AccessController : ControllerBase
         var jwt = await _refresh.RefreshJwt(refresh.Refresh);
 
         return (jwt is null)
-            ? StatusCode(500, "Unable to create te JWT")
+            ? BadRequest("Invalid refresh token")
             : Ok(new TokensDto { Jwt = jwt, Refresh = refresh.Refresh });
+    }
+
+    [HttpPost(Name = "Logout")]
+    public async Task<IActionResult> Logout([FromBody] RefreshTokenDto input)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest();
+
+        await _refresh.RemoveRefreshToken(input.Refresh);
+        return Ok();
     }
 }
