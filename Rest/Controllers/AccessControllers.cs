@@ -1,11 +1,7 @@
-using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
-using WaveAction.Application.Dtos;
 using WaveAction.Application.Dtos.Access;
-using WaveAction.Domain.Interfaces;
-using WaveAction.Domain.Models;
+using WaveAction.Application.Interfaces;
 using WaveAction.Infrastructure.Interfaces;
-using BC = BCrypt.Net.BCrypt;
 
 namespace WaveAction.Rest.Controllers;
 
@@ -14,19 +10,16 @@ namespace WaveAction.Rest.Controllers;
 public class AccessController : ControllerBase
 {
     private readonly ILogger<AccessController> _logger;
-    private readonly IAccessRepository _repository;
-    private readonly IMapper _mapper;
+    private readonly IAccessAppService _access;
     private readonly IJwtService _jwt;
 
     public AccessController(
         ILogger<AccessController> logger,
-        IAccessRepository repository,
-        IMapper mapper,
+        IAccessAppService access,
         IJwtService jwt)
     {
         _logger = logger;
-        _repository = repository;
-        _mapper = mapper;
+        _access = access;
         _jwt = jwt;
     }
 
@@ -37,12 +30,8 @@ public class AccessController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest();
 
-        var author = await _repository.GetAuthorByUsernameOrEmail(login.UserNameOrEmail!);
-
-        if (author is null) return BadRequest("Invalid Username or Email");
-
-        if (!BC.Verify(login.Password, author.PasswordHash))
-            return BadRequest("Invalid Password");
+        // TODO: Better error handling
+        var author = await _access.Login(login);
 
         var jwt = _jwt.GenerateToken(author);
         var refresh = await _jwt.GenerateRefreshToken(author);
@@ -59,10 +48,7 @@ public class AccessController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest();
 
-        var author = _mapper.Map<AuthorModel>(signup);
-        author.Profile.PublicEmail = author.Email;
-
-        await _repository.AddAuthor(author);
+        var author = await _access.Signup(signup);
 
         var jwt = _jwt.GenerateToken(author);
         var refresh = await _jwt.GenerateRefreshToken(author);

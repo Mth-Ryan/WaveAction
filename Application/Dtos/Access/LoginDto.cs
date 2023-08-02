@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace WaveAction.Application.Dtos;
+namespace WaveAction.Application.Dtos.Access;
 
 public class LoginDto
 {
