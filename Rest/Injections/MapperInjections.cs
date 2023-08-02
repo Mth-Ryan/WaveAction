@@ -1,22 +1,28 @@
 using AutoMapper;
-using Slugify;
-using WaveAction.Application.Mapper;
+using WaveAction.Application.Interfaces;
+using WaveAction.Infrastructure.Mapper;
+using WaveAction.Infrastructure.Services;
 
 namespace WaveAction.Rest.Inejections;
 
 public static class MapperInjections
 {
-    public static IServiceCollection AddSlugHelper(this IServiceCollection services)
+    public static IServiceCollection AddSlugService(this IServiceCollection services)
     {
-        services.AddSingleton<ISlugHelper>(new SlugHelper());
+        services.AddSingleton<ISlugService>(new SlugService());
         return services;
     }
 
+    public static IServiceCollection AddBcryptService(this IServiceCollection services)
+    {
+        services.AddSingleton<IBcryptService>(new BcryptService());
+        return services;
+    }
 
     public static IServiceCollection AddObjectMapper(this IServiceCollection services)
     {
         services.AddSingleton<IMapper>(o =>
-            new ObjectMapperFactory(o.GetRequiredService<ISlugHelper>())
+            new ObjectMapperFactory(o.GetRequiredService<ISlugService>(), o.GetRequiredService<IBcryptService>())
                 .CreateMapper());
 
         return services;
