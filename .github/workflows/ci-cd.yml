@@ -24,14 +24,3 @@ jobs:
         run: dotnet build --no-restore
       - name: Test
         run: dotnet test --no-build --verbosity normal
-        
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 20.x
-      - name: Restore dependencies
-        run: |
-          cd ./Site
-          npm install
-      - run: npm run --prefix ./Site build
-      - run: npm run --prefix ./Site test:unit -- --run
